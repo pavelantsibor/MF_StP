@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор укладки MultiFRAME</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Калькулятор укладки MultiFRAME</h1>
+            <p class="subtitle">Расчет и визуализация схем укладки</p>
+        </header>
+
+        <div class="main-content">
+            <div class="input-panel">
+                <div class="card">
+                    <h2>Параметры помещения</h2>
+                    <div class="form-group">
+                        <label for="mainLength">Длина помещения (м):</label>
+                        <input type="number" id="mainLength" value="5.9" step="0.01" min="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="mainWidth">Ширина помещения (м):</label>
+                        <input type="number" id="mainWidth" value="4.3" step="0.01" min="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="hasLeg">
+                            Г-образное помещение (с выступом)
+                        </label>
+                    </div>
+                    <div id="legFields" class="leg-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="legLength">Длина выступа (м):</label>
+                            <input type="number" id="legLength" value="2" step="0.01" min="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="legWidth">Ширина выступа (м):</label>
+                            <input type="number" id="legWidth" value="2" step="0.01" min="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Параметры панелей</h2>
+                    <div class="form-group">
+                        <label>Размер панели:</label>
+                        <div class="static-field">0,75 м × 0,55 м</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Экономика</h2>
+                    <div class="form-group">
+                        <label for="pricePerM2">Стоимость за м² (руб):</label>
+                        <input type="number" id="pricePerM2" value="6000" step="1" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="autoCalc">
+                        Автоматический рассчёт
+                    </label>
+                </div>
+
+                <button id="calculateBtn" class="btn btn-primary">
+                    <span class="btn-icon">📐</span>
+                    Рассчитать
+                </button>
+            </div>
+
+            <div class="visualization-panel">
+                <div class="card">
+                    <div class="scheme-header">
+                        <h2 id="selectedSchemeTitle">Схема укладки</h2>
+                    </div>
+
+                    <div class="canvas-container">
+                        <div class="canvas-wrapper" id="bestScheme">
+                            <canvas id="canvas1"></canvas>
+                            <div class="canvas-controls">
+                                <button class="icon-btn" title="Повернуть против часовой стрелки" onclick="rotateCanvas('bestScheme', -90)">↺</button>
+                                <button class="icon-btn" title="Повернуть по часовой стрелке" onclick="rotateCanvas('bestScheme', 90)">↻</button>
+                                <button class="icon-btn" title="Увеличить" onclick="zoomCanvas('bestScheme', 1.2)">⊕</button>
+                                <button class="icon-btn" title="Уменьшить" onclick="zoomCanvas('bestScheme', 0.8)">⊖</button>
+                                <label class="canvas-checkbox">
+                                    <input type="checkbox" id="showGrid" checked>
+                                    Сетка
+                                </label>
+                                <label class="canvas-checkbox">
+                                    <input type="checkbox" id="showNumbers" checked>
+                                    Номера
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-panel">
+                        <div class="stat-card">
+                            <div class="stat-label">Всего панелей (с запасом)</div>
+                            <div class="stat-value" id="totalPanels">0 шт.</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Площадь покрытия</div>
+                            <div class="stat-value" id="coverageArea">0 м²</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Общая стоимость</div>
+                            <div class="stat-value" id="totalCost">0 ₽</div>
+                        </div>
+                        <div class="stat-card-button">
+                            <button class="btn-print" onclick="saveToPDF()">
+                                СКАЧАТЬ РАСЧЁТ
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:16px;">
+                        <h2>Результаты расчета</h2>
+                        <div id="resultsText" style="white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; color:#333;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="calculator.js"></script>
+    <script src="visualizer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

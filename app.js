@@ -12,16 +12,29 @@ function initializeVisualizers() {
 function calculateAdaptiveScale() {
     const canvasContainer = document.querySelector('.canvas-container');
     if (!canvasContainer) return 50;
-    
-    const containerWidth = canvasContainer.clientWidth - 40; // Учитываем padding
-    const maxRoomDimension = 10; // Максимальный размер помещения для расчета
-    
-    // Базовый масштаб в зависимости от ширины контейнера
-    let scale = Math.floor(containerWidth / maxRoomDimension);
-    
-    // Ограничиваем масштаб
-    scale = Math.max(30, Math.min(scale, 100));
-    
+
+    const containerWidth = canvasContainer.clientWidth - 24; // Учитываем padding
+    const containerHeight = canvasContainer.clientHeight - 24; // Доступная высота
+
+    // Оцениваем максимальный размер комнаты, если доступен currentRoom
+    let maxRoomDimension = 10;
+    if (window.currentParams && window.currentParams.room) {
+        const r = window.currentParams.room;
+        maxRoomDimension = Math.max(r.mainLength, r.legLength, r.mainWidth + r.legWidth);
+        maxRoomDimension = Math.max(3, Math.min(maxRoomDimension, 20));
+    }
+
+    // Масштаб по двум осям и выбор минимального, чтобы всё влезло
+    let scaleW = Math.floor(containerWidth / maxRoomDimension);
+    let scaleH = Math.floor(containerHeight / maxRoomDimension);
+    let scale = Math.min(scaleW, scaleH);
+
+    // Ограничения с учётом мобильных
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    const minScale = isMobile ? 36 : 24;
+    const maxScale = isMobile ? 110 : 100;
+    scale = Math.max(minScale, Math.min(scale, maxScale));
+
     return scale;
 }
 

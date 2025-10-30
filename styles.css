@@ -328,6 +328,40 @@ canvas {
     }
 }
 
+/* Десктоп: всё на одном экране, без прокрутки страницы */
+@media (min-width: 1201px) {
+    html, body, .container {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .header {
+        margin-bottom: 14px;
+        padding: 16px;
+    }
+
+    .main-content {
+        height: calc(100vh - 130px); /* высота минус шапка */
+        align-items: stretch;
+    }
+
+    .visualization-panel .card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .canvas-container {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden; /* без полос прокрутки */
+    }
+
+    .stats-panel {
+        margin-top: 12px;
+    }
+}
+
 @media (max-width: 768px) {
     .header h1 {
         font-size: 1.8rem;
@@ -344,6 +378,31 @@ canvas {
 
     .stats-panel {
         grid-template-columns: 1fr;
+    }
+
+    .canvas-container {
+        min-height: 65vh;
+        padding: 14px;
+    }
+
+    .canvas-wrapper {
+        gap: 12px;
+    }
+
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .icon-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.4rem;
+    }
+
+    .btn {
+        padding: 16px 20px;
+        font-size: 1.05rem;
     }
 }
 

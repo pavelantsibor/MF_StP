@@ -4,6 +4,7 @@ class SchemeVisualizer {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.scale = scale;
+        this.dpr = Math.max(window.devicePixelRatio || 1, 1);
         this.rotation = 0;
         this.zoom = 1.0;
         this.currentPanels = [];
@@ -33,9 +34,19 @@ class SchemeVisualizer {
         
         const width = Math.max(this.currentRoom.mainLength, this.currentRoom.legLength);
         const height = this.currentRoom.mainWidth + this.currentRoom.legWidth;
-        
-        this.canvas.width = width * this.scale * this.zoom + 100;
-        this.canvas.height = height * this.scale * this.zoom + 100;
+        const cssWidth = width * this.scale * this.zoom + 100;
+        const cssHeight = height * this.scale * this.zoom + 100;
+
+        // Размер в CSS-пикселях
+        this.canvas.style.width = cssWidth + 'px';
+        this.canvas.style.height = cssHeight + 'px';
+
+        // Реальный буфер с учётом DPR для резкости
+        this.canvas.width = Math.floor(cssWidth * this.dpr);
+        this.canvas.height = Math.floor(cssHeight * this.dpr);
+
+        // Сбрасываем трансформации и масштабируем контекст
+        this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     }
 
     // Поворот canvas

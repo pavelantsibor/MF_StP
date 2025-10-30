@@ -100,39 +100,46 @@ class SchemeVisualizer {
         this.ctx.save();
         this.ctx.translate(50, 50);
 
-        // Основная часть
+        // Рисуем единый L‑образный контур без внутренней границы между основной частью и выступом
+        const scale = this.scale * this.zoom;
+        const mainL = this.currentRoom.mainLength * scale;
+        const mainW = this.currentRoom.mainWidth * scale;
+        const legL = this.currentRoom.legLength * scale;
+        const legW = this.currentRoom.legWidth * scale;
+
         this.ctx.fillStyle = '#f5f5f5';
         this.ctx.strokeStyle = '#333333';
         this.ctx.lineWidth = 2;
-        
-        this.ctx.fillRect(0, 0, 
-            this.currentRoom.mainLength * this.scale * this.zoom,
-            this.currentRoom.mainWidth * this.scale * this.zoom
-        );
-        this.ctx.strokeRect(0, 0,
-            this.currentRoom.mainLength * this.scale * this.zoom,
-            this.currentRoom.mainWidth * this.scale * this.zoom
-        );
 
-        // Выступ
-        this.ctx.fillRect(0, this.currentRoom.mainWidth * this.scale * this.zoom,
-            this.currentRoom.legLength * this.scale * this.zoom,
-            this.currentRoom.legWidth * this.scale * this.zoom
-        );
-        this.ctx.strokeRect(0, this.currentRoom.mainWidth * this.scale * this.zoom,
-            this.currentRoom.legLength * this.scale * this.zoom,
-            this.currentRoom.legWidth * this.scale * this.zoom
-        );
+        this.ctx.beginPath();
+        // Старт в левом верхнем углу основной части
+        this.ctx.moveTo(0, 0);
+        // Вправо по верхней кромке основной части
+        this.ctx.lineTo(mainL, 0);
+        // Вниз по правой кромке основной части
+        this.ctx.lineTo(mainL, mainW);
+        if (legL > 0 && legW > 0) {
+            // Влево до внутреннего угла (границы выступа)
+            this.ctx.lineTo(legL, mainW);
+            // Вниз по правой кромке выступа
+            this.ctx.lineTo(legL, mainW + legW);
+            // Влево до левого низа выступа
+            this.ctx.lineTo(0, mainW + legW);
+        } else {
+            // Прямоугольная комната
+            this.ctx.lineTo(0, mainW);
+        }
+        // Вверх по левой кромке до начала
+        this.ctx.lineTo(0, 0);
+        this.ctx.closePath();
 
-        // Подписи размеров
-        this.ctx.fillStyle = '#666666';
-        this.ctx.font = `${12 * this.zoom}px Arial`;
-        this.ctx.fillText(`${this.currentRoom.mainLength.toFixed(2)} м`, 
-            (this.currentRoom.mainLength * this.scale * this.zoom) / 2 - 20, -5);
-        this.ctx.fillText(`${this.currentRoom.mainWidth.toFixed(2)} м`, 
-            -45, (this.currentRoom.mainWidth * this.scale * this.zoom) / 2);
+        this.ctx.fill();
+        this.ctx.stroke();
 
         this.ctx.restore();
+
+        // Размерные линии и подписи
+        this.drawDimensions();
     }
 
     // Рисование панелей
@@ -162,7 +169,7 @@ class SchemeVisualizer {
             // Рисование панели
             this.ctx.fillStyle = color.fill;
             this.ctx.strokeStyle = color.stroke;
-            this.ctx.lineWidth = 1.5;
+            this.ctx.lineWidth = 1.2;
             
             this.ctx.fillRect(x, y, width, height);
             this.ctx.strokeRect(x, y, width, height);
@@ -182,6 +189,109 @@ class SchemeVisualizer {
         });
 
         this.ctx.restore();
+    }
+
+    // Рисование размерных линий для Г‑образной комнаты
+    drawDimensions() {
+        const room = this.currentRoom;
+        if (!room) return;
+
+        const ctx = this.ctx;
+        const scale = this.scale * this.zoom;
+
+        const mainW = room.mainWidth * scale;
+        const mainL = room.mainLength * scale;
+        const legL = room.legLength * scale;
+        const legW = room.legWidth * scale;
+
+        // Смещения
+        const baseX = 50;
+        const baseY = 50;
+        const offset = 18;      // отступ от контура
+        const arrowSize = 7 * Math.max(1, this.zoom);
+
+        ctx.save();
+        // Цвет стрелок и подписей — фирменный (как у заголовка)
+        ctx.strokeStyle = '#01644f';
+        ctx.fillStyle = '#01644f';
+        ctx.lineWidth = 1.2;
+        ctx.font = `${Math.max(11, 12 * this.zoom)}px Arial`;
+
+        // Линия размера со стрелками внутрь
+        const drawDimLine = (x1, y1, x2, y2) => {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            // стрелка в точке 1 (внутрь — в сторону x2,y2)
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 + arrowSize * Math.cos(angle + Math.PI / 6), y1 + arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 + arrowSize * Math.cos(angle - Math.PI / 6), y1 + arrowSize * Math.sin(angle - Math.PI / 6));
+            // стрелка в точке 2 (внутрь — в сторону x1,y1)
+            const back = angle + Math.PI;
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 + arrowSize * Math.cos(back + Math.PI / 6), y2 + arrowSize * Math.sin(back + Math.PI / 6));
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 + arrowSize * Math.cos(back - Math.PI / 6), y2 + arrowSize * Math.sin(back - Math.PI / 6));
+            ctx.stroke();
+        };
+
+        // Общая ширина (по Y) слева
+        const totalH = mainW + legW; // в пикселях
+        const leftOffset = 10; // ближе к схеме
+        const leftX = baseX - leftOffset;
+        const topY = baseY;
+        const bottomY = baseY + totalH;
+        drawDimLine(leftX, topY, leftX, bottomY);
+
+        // Подпись общей высоты с остатком
+        const totalHeightMeters = (room.mainWidth + room.legWidth).toFixed(2);
+        const leftLabel = `${totalHeightMeters} м`;
+        ctx.save();
+        ctx.translate(leftX - 8, baseY + totalH / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText(leftLabel, 0, 0);
+        ctx.restore();
+
+        // Общая длина (по X) сверху
+        const topX1 = baseX;
+        const topX2 = baseX + mainL;
+        const topYDim = baseY - 14; // чуть ближе к схеме
+        drawDimLine(topX1, topYDim, topX2, topYDim);
+
+        const totalLengthMeters = room.mainLength.toFixed(2);
+        const topLabel = `${totalLengthMeters} м`;
+        ctx.textAlign = 'center';
+        ctx.fillText(topLabel, (topX1 + topX2) / 2, topYDim - 6);
+
+        // Размеры выступа (верхняя горизонтальная сторона)
+        if (room.legLength > 0 && room.legWidth > 0) {
+            // Горизонтальная сторона выступа: перенесена ниже выступа, чтобы не перекрываться
+            const legBottomY = baseY + mainW + legW + offset;
+            drawDimLine(baseX, legBottomY, baseX + legL, legBottomY);
+            ctx.textAlign = 'center';
+            ctx.fillText(`${room.legLength.toFixed(1)} м`, baseX + legL / 2, legBottomY + 14);
+
+            // Вертикальная сторона выступа справа от выступа
+            const rightDimX = baseX + legL + offset;
+            const rightY1 = baseY + mainW; // верхняя грань выступа
+            const rightY2 = baseY + mainW + legW; // нижняя грань выступа
+            drawDimLine(rightDimX, rightY1, rightDimX, rightY2);
+            ctx.save();
+            ctx.translate(rightDimX + 16, (rightY1 + rightY2) / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText(`${room.legWidth.toFixed(1)} м`, 0, 0);
+            ctx.restore();
+        }
+
+        // Подпись оси Y убрана по требованию
+
+        ctx.restore();
     }
 
     // Главная функция отрисовки

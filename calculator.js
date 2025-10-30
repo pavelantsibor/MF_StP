@@ -147,7 +147,11 @@ class PanelCalculator {
             y += this.panelWidth;
         }
 
-        return panels;
+        // Оптимизация правой кромки: для прямоугольной и Г‑образной комнаты
+        let optimized = this.optimizeRightEdgesForLShape(panels);
+        // Дополнительная оптимизация высоты выступа: замена нижнего горизонтального ряда на вертикальный пояс
+        optimized = this.optimizeLegBottomWithVerticalBand(optimized);
+        return optimized;
     }
 
     // Схема 2: Вертикальная укладка
@@ -291,5 +295,129 @@ class PanelCalculator {
             },
             withReserve: reserve5
         };
+    }
+
+    // Оптимизация: заменить правый столбец горизонтальных панелей на вертикальные
+    optimizeRightColumnWithVertical(initialPanels) {
+        // Работает только для прямоугольной комнаты (без выступа)
+        if (this.room.legLength > 0 && this.room.legWidth > 0) {
+            return initialPanels;
+        }
+
+        const panels = [...initialPanels];
+
+        // Остаток по длине и возможность поставить вертикальную колонну
+        const fullColsLen = Math.floor(this.room.mainLength / this.panelLength);
+        const xStrip = fullColsLen * this.panelLength;
+        const remainder = this.room.mainLength - xStrip;
+        if (remainder <= 1e-6 || remainder + 1e-9 < this.panelWidth) {
+            return panels;
+        }
+
+        // Базовая статистика
+        const baseStats = this.getStatistics(panels, 0);
+
+        // 1) Удаляем горизонтальные панели, которые могут пересечься с вертикальной колонной (те, что начинаются правее или на границе xStrip)
+        const kept = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && (p.x + 1e-9) >= xStrip));
+
+        // 2) Добавляем вертикальные панели у правой границы
+        const candidate = [...kept];
+        let y = 0;
+        while (y + this.panelLength <= this.room.mainWidth + 1e-9) {
+            const x = xStrip; // ставим вплотную к последнему горизонтальному ряду
+            const p = new Panel(x, y, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(candidate));
+            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, candidate)) {
+                candidate.push(p);
+            }
+            y += this.panelLength;
+        }
+
+        // Сравниваем по покрытию — берём лучший вариант
+        const newStats = this.getStatistics(candidate, 0);
+        return parseFloat(newStats.coverageArea) > parseFloat(baseStats.coverageArea) ? candidate : panels;
+    }
+
+    // Оптимизация правых кромок для L‑образной комнаты (и прямоугольной): добавление вертикальной полосы
+    optimizeRightEdgesForLShape(initialPanels) {
+        // Если прямоугольная — используем существующую оптимизацию
+        if (!(this.room.legLength > 0 && this.room.legWidth > 0)) {
+            return this.optimizeRightColumnWithVertical(initialPanels);
+        }
+
+        const panels = [...initialPanels];
+
+        // 1) Правая кромка основной части: x = xStripMain
+        const fullColsLenMain = Math.floor(this.room.mainLength / this.panelLength);
+        const xStripMain = fullColsLenMain * this.panelLength;
+        const remainderMain = this.room.mainLength - xStripMain;
+        if (remainderMain > 1e-6 && remainderMain + 1e-9 >= this.panelWidth) {
+            // Удаляем горизонтали, начинающиеся в полосе x >= xStripMain и лежащие в основной части по Y
+            const keptMain = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && (p.x + 1e-9) >= xStripMain && p.y + p.height <= this.room.mainWidth + 1e-9));
+            panels.length = 0;
+            panels.push(...keptMain);
+            // Добавляем вертикали вдоль правой кромки основной части
+            let y = 0;
+            while (y + this.panelLength <= this.room.mainWidth + 1e-9) {
+                const p = new Panel(xStripMain, y, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(panels));
+                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+                y += this.panelLength;
+            }
+        }
+
+        // 2) Правая кромка выступа: x = xStripLeg (считая от левого края, так же как комнаты)
+        if (this.room.legLength > 0 && this.room.legWidth > 0) {
+            const fullColsLenLeg = Math.floor(this.room.legLength / this.panelLength);
+            const xStripLeg = fullColsLenLeg * this.panelLength;
+            const remainderLeg = this.room.legLength - xStripLeg;
+            if (remainderLeg > 1e-6 && remainderLeg + 1e-9 >= this.panelWidth) {
+                const yTop = this.room.mainWidth;
+                // Удаляем горизонтали верхней части выступа, которые начинаются правее полосы
+                const keptLeg = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && (p.x + 1e-9) >= xStripLeg && p.y >= yTop - 1e-9));
+                panels.length = 0;
+                panels.push(...keptLeg);
+                let y = yTop;
+                while (y + this.panelLength <= yTop + this.room.legWidth + 1e-9) {
+                    const p = new Panel(xStripLeg, y, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(panels));
+                    if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+                    y += this.panelLength;
+                }
+            }
+        }
+
+        return panels;
+    }
+
+    // Оптимизация выступа по высоте: убрать последний горизонтальный ряд и добавить вертикальную полосу внизу
+    optimizeLegBottomWithVerticalBand(initialPanels) {
+        if (!(this.room.legLength > 0 && this.room.legWidth > 0)) return initialPanels;
+
+        const panels = [...initialPanels];
+        const yTop = this.room.mainWidth;
+        const legH = this.room.legWidth;
+        const legL = this.room.legLength;
+
+        // Кол-во горизонтальных рядов, которые помещаются полностью
+        const fullHorizRows = Math.floor(legH / this.panelWidth);
+        if (fullHorizRows < 1) return panels;
+
+        // Координата начала нижней вертикальной полосы так, чтобы она касалась нижней границы выступа
+        const verticalY = yTop + Math.max(0, legH - this.panelLength);
+
+        // Удаляем последний горизонтальный ряд выступа, чтобы освободить место под вертикальную полосу
+        const lastHorizY = yTop + (fullHorizRows - 1) * this.panelWidth;
+        const kept = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && p.y + 1e-9 >= lastHorizY && p.y >= yTop - 1e-9));
+
+        const candidate = [...kept];
+
+        // Добавляем вертикальные панели внизу выступа по всей длине
+        for (let x = 0; x + this.panelWidth <= legL + 1e-6; x += this.panelWidth) {
+            const p = new Panel(x, verticalY, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(candidate));
+            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, candidate)) candidate.push(p);
+        }
+
+        // Выбираем вариант с лучшим покрытием
+        const baseStats = this.getStatistics(panels, 0);
+        const newStats = this.getStatistics(candidate, 0);
+        return parseFloat(newStats.coverageArea) > parseFloat(baseStats.coverageArea) ? candidate : panels;
     }
 }

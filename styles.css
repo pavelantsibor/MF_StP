@@ -38,9 +38,14 @@ body.theme-dark {
     --heading-color: #ffffff;
 }
 
-/* Чекбоксы в тёмной теме — тёмно‑серый акцент */
+/* Чекбоксы в тёмной теме — более светлый цвет для видимости */
 body.theme-dark input[type="checkbox"] {
-    accent-color: #4a4a4a;
+    accent-color: #a4acb4;
+    filter: brightness(1.2);
+}
+
+body.theme-dark input[type="checkbox"]:checked {
+    accent-color: #a4acb4;
 }
 
 body {
@@ -290,12 +295,37 @@ html {
     cursor: pointer;
 }
 
+/* Стилизация стрелок в тёмной теме */
+body.theme-dark .form-group input[type="number"]::-webkit-inner-spin-button {
+    filter: invert(1) brightness(0.7);
+    opacity: 0.8;
+}
+
+body.theme-dark .form-group input[type="number"]::-webkit-outer-spin-button {
+    filter: invert(1) brightness(0.7);
+    opacity: 0.8;
+}
+
+body.theme-dark .form-group input[type="number"]::-webkit-inner-spin-button:hover {
+    opacity: 1;
+}
+
+body.theme-dark .form-group input[type="number"]::-webkit-outer-spin-button:hover {
+    opacity: 1;
+}
+
 .form-group input[type="number"]:focus,
 .form-group input[type="text"]:focus {
     outline: none;
     border-color: var(--accent-color);
     box-shadow: 0 0 0 4px rgba(1, 100, 79, 0.12);
     background: #ffffff;
+}
+
+body.theme-dark .form-group input[type="number"]:focus,
+body.theme-dark .form-group input[type="text"]:focus {
+    background: var(--bg-card);
+    box-shadow: 0 0 0 4px rgba(1, 100, 79, 0.2);
 }
 
 .form-group input[type="checkbox"] {

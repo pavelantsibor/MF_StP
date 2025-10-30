@@ -35,18 +35,18 @@ class Panel {
 }
 
 // Константы размеров панелей
-const DISPLAY_PANEL_LENGTH = 0.735;   // м
-const DISPLAY_PANEL_WIDTH  = 0.535;   // м
-const EFFECTIVE_PANEL_LENGTH = 0.735; // м
-const EFFECTIVE_PANEL_WIDTH  = 0.535; // м
+const DISPLAY_PANEL_LENGTH = 0.75;   // м - полный размер панели (для отображения)
+const DISPLAY_PANEL_WIDTH  = 0.55;   // м - полный размер панели (для отображения)
+const EFFECTIVE_PANEL_LENGTH = 0.735; // м - эффективный размер с учётом шип-паз (для укладки и расчёта)
+const EFFECTIVE_PANEL_WIDTH  = 0.535; // м - эффективный размер с учётом шип-паз (для укладки и расчёта)
 
 // Основной класс калькулятора
 class PanelCalculator {
     constructor(room) {
         this.room = room;
-        // Для раскладки используем видимые размеры панели
-        this.panelLength = DISPLAY_PANEL_LENGTH;
-        this.panelWidth = DISPLAY_PANEL_WIDTH;
+        // Для укладки используем ЭФФЕКТИВНЫЕ размеры (с учётом шип-паз)
+        this.panelLength = EFFECTIVE_PANEL_LENGTH;
+        this.panelWidth = EFFECTIVE_PANEL_WIDTH;
     }
 
     // Проверка, находится ли панель внутри Г-образной комнаты
@@ -186,114 +186,73 @@ class PanelCalculator {
         return panels;
     }
 
-    // Схема 3: Комбинированная укладка
+    // Схема 3: Комбинированная (верхняя вертикальная полоса + горизонтальные ниже)
     calculateScheme3() {
-        // Начинаем с горизонтальной схемы
-        let panels = this.calculateScheme1();
-        
-        // Пытаемся добавить вертикальные панели в зазоры
-        panels = this.addVerticalPanelsToGaps(panels);
-        panels = this.addHorizontalPanelsToVerticalGaps(panels);
+        const panels = [];
+        let panelNumber = 1;
+
+        // 1) Верхняя вертикальная полоса по основной части
+        for (let x = 0; x + this.panelWidth <= this.room.mainLength + 1e-6; x += this.panelWidth) {
+            const p = new Panel(x, 0, this.panelWidth, this.panelLength, Orientation.VERTICAL, panelNumber++);
+            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+        }
+
+        // 2) Горизонтальные ряды ниже на всей основной части, начиная с Y = panelLength
+        for (let y = this.panelLength; y + this.panelWidth <= this.room.mainWidth + 1e-6; y += this.panelWidth) {
+            for (let x = 0; x + this.panelLength <= this.room.mainLength + 1e-6; x += this.panelLength) {
+                const p = new Panel(x, y, this.panelLength, this.panelWidth, Orientation.HORIZONTAL, panelNumber++);
+                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+            }
+        }
+
+        // 3) Если есть выступ: верхняя вертикальная полоса выступа на уровне mainWidth
+        if (this.room.legLength > 0 && this.room.legWidth > 0) {
+            const topY = this.room.mainWidth;
+            for (let x = 0; x + this.panelWidth <= this.room.legLength + 1e-6; x += this.panelWidth) {
+                const p = new Panel(x, topY, this.panelWidth, this.panelLength, Orientation.VERTICAL, panelNumber++);
+                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+            }
+
+            // Горизонтальные ряды ниже на выступе, начиная с Y = mainWidth + panelLength
+            for (let y = topY + this.panelLength; y + this.panelWidth <= topY + this.room.legWidth + 1e-6; y += this.panelWidth) {
+                for (let x = 0; x + this.panelLength <= this.room.legLength + 1e-6; x += this.panelLength) {
+                    const p = new Panel(x, y, this.panelLength, this.panelWidth, Orientation.HORIZONTAL, panelNumber++);
+                    if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+                }
+            }
+        }
 
         return panels;
     }
 
-    // Добавление вертикальных панелей в зазоры (Метод 1)
-    addVerticalPanelsToGaps(panels) {
-        const optimizedPanels = [...panels];
-        
-        // Определяем максимальные размеры
-        const maxY = this.room.mainWidth + this.room.legWidth;
-        
-        // Находим горизонтальные панели
-        const horizontalPanels = optimizedPanels.filter(p => 
-            p.orientation === Orientation.HORIZONTAL
-        );
-        
-        if (horizontalPanels.length === 0) return optimizedPanels;
-        
-        // Пытаемся добавить вертикальные панели по всей высоте комнаты
-        let y = 0;
-        while (y < maxY) {
-            // Находим максимальную X координату горизонтальных панелей на этой высоте
-            const panelsAtY = horizontalPanels.filter(p => 
-                p.y <= y && p.y + p.height > y
-            );
-            
-            if (panelsAtY.length > 0) {
-                const maxX = Math.max(...panelsAtY.map(p => p.x + p.width));
-                
-                // Пробуем добавить вертикальную панель
-                if (y + this.panelLength <= maxY) {
-                    const panelNumber = this.findAvailablePanelNumber(optimizedPanels);
-                    
-                    const newPanel = new Panel(
-                        maxX, y,
-                        this.panelWidth, this.panelLength,
-                        Orientation.VERTICAL,
-                        panelNumber
-                    );
-                    
-                    if (this.isPanelInsideRoom(maxX, y, this.panelWidth, this.panelLength) &&
-                        !this.checkPanelCollision(newPanel, optimizedPanels)) {
-                        optimizedPanels.push(newPanel);
-                    }
-                }
-            }
-            
-            y += this.panelLength;
+    // Замена верхнего горизонтального ряда на вертикальные панели по всей длине
+    replaceTopRowWithVertical(panels) {
+        let optimized = [...panels];
+
+        // Удаляем горизонтальные панели верхнего ряда основной части (y < panelWidth)
+        optimized = optimized.filter(p => !(p.orientation === Orientation.HORIZONTAL && p.y < this.panelWidth));
+
+        // Добавляем вертикальные панели сверху по всей длине основной части
+        for (let x = 0; x + this.panelWidth <= this.room.mainLength + 1e-6; x += this.panelWidth) {
+            const p = new Panel(x, 0, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(optimized));
+            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, optimized)) optimized.push(p);
         }
 
-        return optimizedPanels;
-    }
+        // Если есть выступ (Г‑образная комната) — делаем то же для его верхнего ряда
+        if (this.room.legLength > 0 && this.room.legWidth > 0) {
+            const yTop = this.room.mainWidth; // верх выступа
 
-    // Добавление горизонтальных панелей в вертикальные зазоры
-    addHorizontalPanelsToVerticalGaps(panels) {
-        const optimizedPanels = [...panels];
-        
-        // Определяем максимальные размеры
-        const maxX = Math.max(this.room.mainLength, this.room.legLength);
-        
-        // Находим вертикальные панели
-        const verticalPanels = optimizedPanels.filter(p => 
-            p.orientation === Orientation.VERTICAL
-        );
-        
-        if (verticalPanels.length === 0) return optimizedPanels;
-        
-        // Пытаемся добавить горизонтальные панели по всей ширине комнаты
-        let x = 0;
-        while (x < maxX) {
-            // Находим максимальную Y координату вертикальных панелей на этой ширине
-            const panelsAtX = verticalPanels.filter(p => 
-                p.x <= x && p.x + p.width > x
-            );
-            
-            if (panelsAtX.length > 0) {
-                const maxY = Math.max(...panelsAtX.map(p => p.y + p.height));
-                
-                // Пробуем добавить горизонтальную панель
-                if (x + this.panelLength <= maxX) {
-                    const panelNumber = this.findAvailablePanelNumber(optimizedPanels);
-                    
-                    const newPanel = new Panel(
-                        x, maxY,
-                        this.panelLength, this.panelWidth,
-                        Orientation.HORIZONTAL,
-                        panelNumber
-                    );
-                    
-                    if (this.isPanelInsideRoom(x, maxY, this.panelLength, this.panelWidth) &&
-                        !this.checkPanelCollision(newPanel, optimizedPanels)) {
-                        optimizedPanels.push(newPanel);
-                    }
-                }
+            // Удаляем горизонтальные панели верхнего ряда выступа
+            optimized = optimized.filter(p => !(p.orientation === Orientation.HORIZONTAL && p.y >= yTop && p.y < yTop + this.panelWidth));
+
+            // Добавляем вертикальные панели по всей длине выступа
+            for (let x = 0; x + this.panelWidth <= this.room.legLength + 1e-6; x += this.panelWidth) {
+                const p = new Panel(x, yTop, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(optimized));
+                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, optimized)) optimized.push(p);
             }
-            
-            x += this.panelLength;
         }
 
-        return optimizedPanels;
+        return optimized;
     }
 
     // Получение расширенной статистики
@@ -306,7 +265,8 @@ class PanelCalculator {
         const effectivePanelArea = EFFECTIVE_PANEL_LENGTH * EFFECTIVE_PANEL_WIDTH;
         const coverageAreaEff = totalPanels * effectivePanelArea; // м²
 
-        const totalCost = coverageAreaEff * pricePerM2;
+        // Стоимость считаем по ПЛОЩАДИ ПОМЕЩЕНИЯ (как в Python)
+        const totalCost = this.room.getTotalArea() * pricePerM2;
 
         // Первичные зазоры по основной части (для активной схемы раскладки)
         const mainRemainderLen = this.room.mainLength % this.panelLength;

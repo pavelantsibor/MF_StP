@@ -54,6 +54,7 @@ body {
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 20px;
 }
 
 * {
@@ -104,7 +105,7 @@ html {
 
 .brand-logo {
     position: absolute;
-    left: 20px;
+    left: 40px;
     top: 50%;
     transform: translateY(-50%);
     height: clamp(36px, 8vw, 72px);
@@ -481,6 +482,18 @@ canvas {
 }
 
 @media (max-width: 768px) {
+    .header {
+        padding-top: 60px; /* место под логотип сверху */
+        text-align: center;
+    }
+
+    .brand-logo {
+        top: 10px;
+        left: 10px;
+        transform: none;
+        height: 48px;
+    }
+
     .header h1 {
         font-size: 1.8rem;
     }
@@ -525,9 +538,14 @@ canvas {
 }
 
 @media (max-width: 480px) {
+    .header {
+        padding-top: 55px;
+    }
+
     .brand-logo {
-        left: 16px;
-        height: 36px;
+        left: 8px;
+        top: 8px;
+        height: 40px;
     }
 }
 

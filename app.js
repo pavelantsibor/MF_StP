@@ -397,6 +397,24 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeVisualizers();
     setupLegToggle();
     setupEventListeners();
+    // Тема: загрузка и обработчик для переключателя checkbox
+    try {
+        const savedTheme = localStorage.getItem('mf_theme');
+        const isDark = savedTheme === 'dark';
+        if (isDark) document.body.classList.add('theme-dark');
+
+        const switchEl = document.getElementById('themeSwitch');
+        if (switchEl) {
+            switchEl.checked = isDark;
+            switchEl.addEventListener('change', () => {
+                const dark = switchEl.checked;
+                document.body.classList.toggle('theme-dark', dark);
+                localStorage.setItem('mf_theme', dark ? 'dark' : 'light');
+            });
+        }
+    } catch (e) {
+        // localStorage может быть недоступен в приватных режимах — безопасно игнорируем
+    }
     
     // Автоматический расчет при загрузке с параметрами по умолчанию
     calculateAllSchemes();

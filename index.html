@@ -11,6 +11,7 @@
 <body>
     <div class="container">
         <header class="header">
+            <img src="logo.png" alt="Логотип" class="brand-logo" />
             <h1>Калькулятор MultiFRAME</h1>
             <p class="subtitle">Расчёт и визуализация схем монтажа на потолке</p>
         </header>
@@ -69,7 +70,14 @@
                 </div>
 
                 <button id="calculateBtn" class="btn btn-primary">
-                    <span class="btn-icon">📐</span>
+                    <span class="btn-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/>
+                        </svg>
+                    </span>
                     Рассчитать
                 </button>
             </div>
@@ -78,6 +86,16 @@
                 <div class="card">
                     <div class="scheme-header">
                         <h2 id="selectedSchemeTitle">Схема монтажа</h2>
+                        <div class="theme-toggle">
+                            <label class="theme-switch" title="Переключить тему">
+                                <input type="checkbox" id="themeSwitch" aria-label="Переключатель темы">
+                                <span class="switch-track">
+                                    <span class="icon-sun" aria-hidden="true"></span>
+                                    <span class="icon-moon" aria-hidden="true"></span>
+                                    <span class="switch-thumb"></span>
+                                </span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="canvas-container">
@@ -120,7 +138,7 @@
 
                     <div class="card" style="margin-top:16px;">
                         <h2>Результаты расчета</h2>
-                        <div id="resultsText" style="white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; color:#333;"></div>
+                        <div id="resultsText" style="white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; color: var(--text-primary);"></div>
                     </div>
                 </div>
             </div>

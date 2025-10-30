@@ -16,6 +16,31 @@
     --success-color: #1a7f5f;
     --shadow: 0 6px 20px rgba(17, 24, 39, 0.07);
     --shadow-lg: 0 12px 30px rgba(17, 24, 39, 0.12);
+    --heading-color: #4a4a4a;
+}
+
+/* Чекбоксы в светлой теме — фирменный зелёный */
+input[type="checkbox"] {
+    accent-color: var(--accent-color);
+}
+
+/* Тёмная тема — лаконичные переопределения переменных */
+body.theme-dark {
+    --text-primary: #e6e7ea;
+    --text-secondary: #a4acb4;
+    --bg-page: #2d2e33;
+    --bg-card: #2f3036;
+    --bg-subtle: #26272c;
+    --border-color: #3a3b42;
+    --success-color: #2ab38b;
+    --shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.5);
+    --heading-color: #ffffff;
+}
+
+/* Чекбоксы в тёмной теме — тёмно‑серый акцент */
+body.theme-dark input[type="checkbox"] {
+    accent-color: #4a4a4a;
 }
 
 body {
@@ -25,6 +50,33 @@ body {
     min-height: 100vh;
     padding: 20px;
     line-height: 1.6;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--bg-subtle);
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--bg-subtle);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
 }
 
 .container {
@@ -40,6 +92,7 @@ body {
     border-radius: 16px;
     box-shadow: var(--shadow);
     border: 1px solid #01644f;
+    position: relative;
 }
 
 .header h1 {
@@ -48,6 +101,97 @@ body {
     color: #ffffff;
     font-weight: 700;
 }
+
+.brand-logo {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: clamp(36px, 8vw, 72px);
+    width: auto;
+    display: block;
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+/* Переключатель темы в scheme-header */
+.scheme-header .theme-toggle {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-switch {
+    display: inline-block;
+}
+
+.theme-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-track {
+    position: relative;
+    width: 64px;
+    height: 32px;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    box-shadow: var(--shadow);
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.switch-thumb {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    right: 3px;
+    transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+
+.icon-sun, .icon-moon {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+
+/* Минималистичные значки */
+.icon-sun {
+    background: #4a4a4a;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+}
+
+.icon-moon {
+    background:
+      radial-gradient(circle at 70% 30%, transparent 8px, #ffffff 9px);
+    border-radius: 50%;
+}
+
+.theme-switch input:checked + .switch-track {
+    background: #111111;
+    border-color: #000000;
+}
+
+.theme-switch input:checked + .switch-track .switch-thumb {
+    transform: translateX(-32px);
+    background: #1f1f1f;
+    border-color: #000000;
+}
+
+.theme-switch input:checked + .switch-track .icon-sun { opacity: 0.5; }
+.theme-switch input:not(:checked) + .switch-track .icon-moon { opacity: 0.5; }
 
 .subtitle {
     color: #ffffff;
@@ -74,7 +218,7 @@ body {
 .card h2 {
     font-size: 1.1rem;
     margin-bottom: 16px;
-    color: var(--text-primary);
+    color: var(--heading-color);
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 10px;
 }
@@ -142,7 +286,7 @@ body {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.18s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -158,11 +302,13 @@ body {
 }
 
 .btn:active {
-    transform: translateY(0);
+    transform: scale(0.98);
 }
 
 .btn-icon {
     font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
 }
 
 .tabs-container {
@@ -214,6 +360,7 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 15px;
+    position: relative;
 }
 
 .canvas-wrapper.hidden {
@@ -238,15 +385,15 @@ canvas {
 }
 
 .icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border: 1px solid var(--border-color);
-    background: #ffffff;
+    background: var(--bg-card);
     color: var(--text-primary);
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 1.2rem;
-    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    transition: transform 0.18s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -259,6 +406,10 @@ canvas {
     transform: translateY(-1px);
 }
 
+.icon-btn:active {
+    transform: translateY(0) scale(0.96);
+}
+
 .stats-panel {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -268,8 +419,8 @@ canvas {
 
 .stat-card {
     background: var(--bg-subtle);
-    padding: 15px;
-    border-radius: 8px;
+    padding: 16px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
     text-align: center;
 }
@@ -281,8 +432,8 @@ canvas {
 }
 
 .stat-label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+    color: var(--heading-color);
+    font-size: 1.1rem;
     margin-bottom: 8px;
     font-weight: 700;
 }
@@ -373,6 +524,13 @@ canvas {
     }
 }
 
+@media (max-width: 480px) {
+    .brand-logo {
+        left: 16px;
+        height: 36px;
+    }
+}
+
 .leg-fields {
     padding-left: 20px;
     border-left: 2px solid var(--accent-color);
@@ -382,14 +540,23 @@ canvas {
 
 .scheme-header {
     margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .scheme-header h2 {
-    color: var(--accent-color);
-    font-size: 1.2rem;
+    color: var(--heading-color);
+    font-size: 1.1rem;
     margin: 0;
     border: none;
     padding: 0;
+}
+
+/* В светлой теме заголовок схемы остаётся фирменным зелёным */
+body:not(.theme-dark) .scheme-header h2 {
+    color: var(--accent-color);
 }
 
 .btn-print {
@@ -402,7 +569,7 @@ canvas {
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.18s ease, background 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -421,7 +588,7 @@ canvas {
 }
 
 .btn-print:active {
-    transform: translateY(0);
+    transform: scale(0.98);
 }
 
 .canvas-checkbox {
@@ -429,7 +596,7 @@ canvas {
     align-items: center;
     gap: 5px;
     padding: 8px 12px;
-    background: #ffffff;
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     cursor: pointer;

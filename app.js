@@ -76,7 +76,7 @@ function calculateAllSchemes() {
         const bestScheme = schemes[0];
         
         // Обновляем заголовок
-        document.getElementById('selectedSchemeTitle').textContent = 'Схема укладки';
+        document.getElementById('selectedSchemeTitle').textContent = 'Схема монтажа';
         
         // Обновляем визуализатор
         if (!visualizers.bestScheme) {
@@ -137,8 +137,6 @@ function updateResultsText(params, panels, schemeName) {
     const coveragePercent = ((parseFloat(stats.coverageArea) / roomArea) * 100).toFixed(1);
 
     const lines = [];
-    lines.push(`Схема укладки`);
-    lines.push('====================================');
     lines.push(`Размер панели: 0,75 × 0,55 м`);
     if (params.hasLeg) {
         lines.push(`Размер помещения: ${params.room.mainLength.toFixed(2)}×${params.room.mainWidth.toFixed(2)} м (осн.) + ${params.room.legLength.toFixed(2)}×${params.room.legWidth.toFixed(2)} м (выступ)`);
@@ -242,101 +240,102 @@ async function saveToPDF() {
         const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://stp-multiframe.ru/';
         
         pdfContainer.innerHTML = `
-            <div style="background: ${brandColor}; color: white; padding: 15px; text-align: left;">
-                <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">MultiFRAME</div>
-                <div style="font-size: 12px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
-                    Звукоизоляционная система для потолка
-                </div>
-            </div>
-            
-            <div style="padding: 20px; display: flex; flex-direction: column;">
-                <h1 style="text-align: center; font-size: 18px; font-weight: bold; margin: 0 0 20px 0; color: #333;">
-                    РАСЧЕТ СХЕМЫ УКЛАДКИ
-                </h1>
-                
-                <div style="margin-bottom: 15px;">
-                    <h2 style="color: ${brandColor}; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">
-                        Параметры помещения:
-                    </h2>
-                    <div style="font-size: 10px; line-height: 1.6; color: #444; padding-left: 10px;">
-                        <div>Размеры: ${window.currentParams.room.mainLength.toFixed(2)} × ${window.currentParams.room.mainWidth.toFixed(2)} м${window.currentParams.hasLeg ? ' (основное)' : ''}</div>
-                        ${window.currentParams.hasLeg ? '<div>+ ' + window.currentParams.room.legLength.toFixed(2) + ' × ' + window.currentParams.room.legWidth.toFixed(2) + ' м (выступ)</div>' : ''}
-                        <div>Площадь помещения: ${roomArea.toFixed(2)} м²</div>
-                        <div>Размер панели: 0,75 × 0,55 м</div>
+            <div style="position: relative; height: 297mm; display: flex; flex-direction: column;">
+                <div>
+                    <div style="background: ${brandColor}; color: white; padding: 18px; text-align: left;">
+                        <div style="font-size: 30px; font-weight: bold; margin-bottom: 6px;">MultiFRAME</div>
+                        <div style="font-size: 14px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
+                            Звукоизоляционная система для потолка
+                        </div>
                     </div>
-                </div>
-                
-                <div style="margin-bottom: 15px;">
-                    <h2 style="color: ${brandColor}; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">
-                        Результаты расчета:
-                    </h2>
-                    <div style="font-size: 10px; line-height: 1.6; color: #444; padding-left: 10px;">
-                        <div>Тип схемы: ${window.currentBestScheme.name}</div>
-                        <div>Всего панелей: ${stats.total} шт. (с запасом 5%: ${stats.withReserve} шт.)</div>
-                        <div>Горизонтальных панелей: ${stats.horizontal} шт.</div>
-                        <div>Вертикальных панелей: ${stats.vertical} шт.</div>
-                        <div>Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)</div>
-                        <div style="font-weight: bold; color: ${brandColor}; font-size: 11px; margin-top: 5px;">
-                            Общая стоимость: ${stats.totalCost.toLocaleString('ru-RU')} ₽
+                    
+                    <div style="padding: 22px; display: flex; flex-direction: column;">
+                        <h1 style="text-align: center; font-size: 22px; font-weight: bold; margin: 0 0 22px 0; color: #333;">
+                            РАСЧЁТ СХЕМЫ МОНТАЖА
+                        </h1>
+                        
+                        <div style="margin-bottom: 18px;">
+                            <h2 style="color: ${brandColor}; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">
+                                Параметры помещения:
+                            </h2>
+                            <div style="font-size: 12px; line-height: 1.6; color: #444; padding-left: 10px;">
+                                <div>Размеры: ${window.currentParams.room.mainLength.toFixed(2)} × ${window.currentParams.room.mainWidth.toFixed(2)} м${window.currentParams.hasLeg ? ' (основное)' : ''}</div>
+                                ${window.currentParams.hasLeg ? '<div>+ ' + window.currentParams.room.legLength.toFixed(2) + ' × ' + window.currentParams.room.legWidth.toFixed(2) + ' м (выступ)</div>' : ''}
+                                <div>Площадь помещения: ${roomArea.toFixed(2)} м²</div>
+                                <div>Размер панели: 0,75 × 0,55 м</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 18px;">
+                            <h2 style="color: ${brandColor}; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">
+                                Результаты расчёта:
+                            </h2>
+                            <div style="font-size: 12px; line-height: 1.6; color: #444; padding-left: 10px;">
+                                <div>Всего панелей: ${stats.total} шт. (с запасом 5%: ${stats.withReserve} шт.)</div>
+                                <div>Горизонтальных панелей: ${stats.horizontal} шт.</div>
+                                <div>Вертикальных панелей: ${stats.vertical} шт.</div>
+                                <div>Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)</div>
+                                <div style="font-weight: bold; color: ${brandColor}; font-size: 14px; margin-top: 6px;">
+                                    Общая стоимость: ${stats.totalCost.toLocaleString('ru-RU')} ₽
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 14px;">
+                            <h2 style="color: ${brandColor}; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">
+                                Схема монтажа:
+                            </h2>
+                            <div id="pdfCanvasWrapper" style="text-align: center; display: flex; justify-content: center; max-height: 350px;">
+                                <!-- Canvas будет скопирован сюда -->
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <div style="margin-bottom: 12px;">
-                    <h2 style="color: ${brandColor}; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">
-                        Схема укладки:
-                    </h2>
-                    <div id="pdfCanvasWrapper" style="text-align: center; display: flex; justify-content: center; max-height: 350px;">
-                        <!-- Canvas будет скопирован сюда -->
+                <div style="margin-top: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px; border-top: 1px solid ${brandColor};">
+                        <div style="flex: 1;">
+                            <div style="font-size: 11px; font-weight: bold; color: ${brandColor}; margin-bottom: 6px;">Контакты:</div>
+                            <div style="font-size: 11px; line-height: 1.6; color: #444;">
+                                <div>Сайт: https://stp-multiframe.ru/</div>
+                                <div>Офис: г. Иваново, ул. Смирнова, д. 74</div>
+                                <div>Производитель: ООО "Стандартпласт"</div>
+                                <div>Email: stp-russia@stplus.ru</div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-left: 20px;">
+                            <img src="${qrImageUrl}" style="width: 90px; height: 90px; display: block; margin: 0;" />
+                            <div style="font-size: 10px; color: #666; margin-top: 6px; text-align: center;">
+                                Сканируйте<br>для перехода<br>на сайт
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 10px; color: #999; padding: 10px 20px; border-top: 1px solid #eee;">
+                        Документ создан: ${dateStr}
                     </div>
                 </div>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 20px; border-top: 1px solid ${brandColor};">
-                <div style="flex: 1;">
-                    <div style="font-size: 9px; font-weight: bold; color: ${brandColor}; margin-bottom: 5px;">Контакты:</div>
-                    <div style="font-size: 9px; line-height: 1.6; color: #444;">
-                        <div>Сайт: https://stp-multiframe.ru/</div>
-                        <div>Офис: г. Иваново, ул. Смирнова, д. 74</div>
-                        <div>Производитель: ООО "Стандартпласт"</div>
-                        <div>Email: stp-russia@stplus.ru</div>
-                    </div>
-                </div>
-                <div style="text-align: center; margin-left: 20px;">
-                    <img src="${qrImageUrl}" style="width: 80px; height: 80px; display: block; margin: 0;" />
-                    <div style="font-size: 8px; color: #666; margin-top: 5px; text-align: center;">
-                        Сканируйте<br>для перехода<br>на сайт
-                    </div>
-                </div>
-            </div>
-            
-            <div style="text-align: center; font-size: 8px; color: #999; padding: 10px 20px; border-top: 1px solid #eee; margin-top: 10px;">
-                Документ создан: ${dateStr}
             </div>
         `;
         
         document.body.appendChild(pdfContainer);
         
-        // Копируем canvas в PDF
+        // Копируем canvas в PDF с повышенной плотностью пикселей (для резкости)
         const canvasWrapper = pdfContainer.querySelector('#pdfCanvasWrapper');
         const originalCanvas = document.getElementById('canvas1');
         if (originalCanvas && canvasWrapper) {
-            // Вычисляем масштаб, сохраняя пропорции
-            const maxHeight = 350;
-            const scale = maxHeight / originalCanvas.height;
-            
-            // Создаем новый canvas с увеличенными размерами
+            // Поднимаем реальное разрешение в 2 раза, визуальный размер оставляем прежним
+            const pixelScale = 2; // коэффициент повышения DPI
             const newCanvas = document.createElement('canvas');
-            newCanvas.width = originalCanvas.width * scale;
-            newCanvas.height = originalCanvas.height * scale;
-            newCanvas.style.maxWidth = '100%';
-            newCanvas.style.height = 'auto';
-            
-            // Копируем контент на новый canvas с масштабированием
+            newCanvas.width = originalCanvas.width * pixelScale;
+            newCanvas.height = originalCanvas.height * pixelScale;
+            // Визуальный размер ограничиваем, чтобы не менять макет (высота ~350px)
+            newCanvas.style.maxHeight = '350px';
+            newCanvas.style.width = 'auto';
+
             const ctx = newCanvas.getContext('2d');
-            ctx.scale(scale, scale);
+            ctx.scale(pixelScale, pixelScale);
             ctx.drawImage(originalCanvas, 0, 0);
-            
+
             canvasWrapper.appendChild(newCanvas);
         }
         
@@ -345,7 +344,7 @@ async function saveToPDF() {
         
         // Конвертируем в canvas через html2canvas с высоким качеством
         const canvasImg = await html2canvas(pdfContainer, {
-            scale: 4,
+            scale: 2,
             useCORS: true,
             logging: false,
             backgroundColor: '#ffffff',
@@ -356,28 +355,19 @@ async function saveToPDF() {
         
         // Создаем PDF
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('portrait', 'mm', 'a4');
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         
         // Вычисляем размеры изображения для PDF
-        const imgData = canvasImg.toDataURL('image/png');
+        const imgData = canvasImg.toDataURL('image/jpeg', 0.85);
         const imgWidth = pageWidth;
         const imgHeight = (canvasImg.height * pageWidth) / canvasImg.width;
         
-        // Добавляем изображение на страницы (может быть несколько)
-        let heightLeft = imgHeight;
-        let position = 0;
-        
-        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-        
-        while (heightLeft >= 0) {
-            position = heightLeft - imgHeight;
-            doc.addPage();
-            doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-        }
+        // Вписываем в одну страницу без добавления дополнительных страниц
+        const yPos = 0;
+        const fittedHeight = Math.min(imgHeight, pageHeight);
+        doc.addImage(imgData, 'JPEG', 0, yPos, imgWidth, fittedHeight, undefined, 'FAST');
         
         // Удаляем временный контейнер
         document.body.removeChild(pdfContainer);

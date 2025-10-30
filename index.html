@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор укладки MultiFRAME</title>
+    <title>Калькулятор MultiFRAME</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -11,14 +11,14 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>Калькулятор укладки MultiFRAME</h1>
-            <p class="subtitle">Расчет и визуализация схем укладки</p>
+            <h1>Калькулятор MultiFRAME</h1>
+            <p class="subtitle">Расчёт и визуализация схем монтажа на потолке</p>
         </header>
 
         <div class="main-content">
             <div class="input-panel">
                 <div class="card">
-                    <h2>Параметры помещения</h2>
+                    <h2>Площадь потолка</h2>
                     <div class="form-group">
                         <label for="mainLength">Длина помещения (м):</label>
                         <input type="number" id="mainLength" value="5.9" step="0.01" min="0.1">
@@ -77,17 +77,15 @@
             <div class="visualization-panel">
                 <div class="card">
                     <div class="scheme-header">
-                        <h2 id="selectedSchemeTitle">Схема укладки</h2>
+                        <h2 id="selectedSchemeTitle">Схема монтажа</h2>
                     </div>
 
                     <div class="canvas-container">
                         <div class="canvas-wrapper" id="bestScheme">
                             <canvas id="canvas1"></canvas>
                             <div class="canvas-controls">
-                                <button class="icon-btn" title="Повернуть против часовой стрелки" onclick="rotateCanvas('bestScheme', -90)">↺</button>
-                                <button class="icon-btn" title="Повернуть по часовой стрелке" onclick="rotateCanvas('bestScheme', 90)">↻</button>
-                                <button class="icon-btn" title="Увеличить" onclick="zoomCanvas('bestScheme', 1.2)">⊕</button>
-                                <button class="icon-btn" title="Уменьшить" onclick="zoomCanvas('bestScheme', 0.8)">⊖</button>
+                                <button class="icon-btn" title="Увеличить" style="font-weight:700;" onclick="zoomCanvas('bestScheme', 1.2)">+</button>
+                                <button class="icon-btn" title="Уменьшить" style="font-weight:700;" onclick="zoomCanvas('bestScheme', 0.8)">-</button>
                                 <label class="canvas-checkbox">
                                     <input type="checkbox" id="showGrid" checked>
                                     Сетка

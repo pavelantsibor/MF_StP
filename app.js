@@ -1,3 +1,166 @@
+// Константы валидации
+const VALIDATION = {
+    MIN_ROOM_SIZE: 0.1,
+    MAX_ROOM_SIZE: 100,
+    MIN_PRICE: 0,
+    MAX_PRICE: 1000000,
+    MIN_TOTAL_AREA: 0.1,
+    MAX_TOTAL_AREA: 5000 // м²
+};
+
+// Функция валидации числа
+function validateNumber(value, min, max, fieldName) {
+    if (value === '' || value === null || value === undefined) {
+        return { valid: false, message: `Поле "${fieldName}" обязательно для заполнения` };
+    }
+    
+    const num = parseFloat(value);
+    
+    if (isNaN(num)) {
+        return { valid: false, message: `Поле "${fieldName}" должно содержать число` };
+    }
+    
+    if (num < min) {
+        return { valid: false, message: `Минимальное значение: ${min}` };
+    }
+    
+    if (num > max) {
+        return { valid: false, message: `Максимальное значение: ${max}` };
+    }
+    
+    return { valid: true, value: num };
+}
+
+// Показ ошибки валидации
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    const errorEl = document.getElementById(fieldId + 'Error');
+    
+    if (field) {
+        field.classList.add('error');
+    }
+    
+    if (errorEl) {
+        errorEl.textContent = message || '';
+    }
+}
+
+// Очистка ошибки валидации
+function clearFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    const errorEl = document.getElementById(fieldId + 'Error');
+    
+    if (field) {
+        field.classList.remove('error');
+    }
+    
+    if (errorEl) {
+        errorEl.textContent = '';
+    }
+}
+
+// Валидация всех полей формы
+function validateForm() {
+    let isValid = true;
+    
+    // Основные размеры
+    const mainLengthVal = validateNumber(
+        document.getElementById('mainLength').value,
+        VALIDATION.MIN_ROOM_SIZE,
+        VALIDATION.MAX_ROOM_SIZE,
+        'Длина помещения'
+    );
+    if (!mainLengthVal.valid) {
+        showFieldError('mainLength', mainLengthVal.message);
+        isValid = false;
+    } else {
+        clearFieldError('mainLength');
+    }
+    
+    const mainWidthVal = validateNumber(
+        document.getElementById('mainWidth').value,
+        VALIDATION.MIN_ROOM_SIZE,
+        VALIDATION.MAX_ROOM_SIZE,
+        'Ширина помещения'
+    );
+    if (!mainWidthVal.valid) {
+        showFieldError('mainWidth', mainWidthVal.message);
+        isValid = false;
+    } else {
+        clearFieldError('mainWidth');
+    }
+    
+    // Размеры выступа (если выбран)
+    const hasLeg = document.getElementById('hasLeg').checked;
+    if (hasLeg) {
+        const legLengthVal = validateNumber(
+            document.getElementById('legLength').value,
+            VALIDATION.MIN_ROOM_SIZE,
+            VALIDATION.MAX_ROOM_SIZE,
+            'Длина выступа'
+        );
+        if (!legLengthVal.valid) {
+            showFieldError('legLength', legLengthVal.message);
+            isValid = false;
+        } else {
+            clearFieldError('legLength');
+        }
+        
+        const legWidthVal = validateNumber(
+            document.getElementById('legWidth').value,
+            VALIDATION.MIN_ROOM_SIZE,
+            VALIDATION.MAX_ROOM_SIZE,
+            'Ширина выступа'
+        );
+        if (!legWidthVal.valid) {
+            showFieldError('legWidth', legWidthVal.message);
+            isValid = false;
+        } else {
+            clearFieldError('legWidth');
+        }
+        
+        // Проверка логики: выступ не должен быть больше основной части
+        if (mainLengthVal.valid && legLengthVal.valid && legLengthVal.value > mainLengthVal.value) {
+            showFieldError('legLength', 'Длина выступа не может быть больше длины помещения');
+            isValid = false;
+        }
+    }
+    
+    // Стоимость
+    const priceVal = validateNumber(
+        document.getElementById('pricePerM2').value || '0',
+        VALIDATION.MIN_PRICE,
+        VALIDATION.MAX_PRICE,
+        'Стоимость за м²'
+    );
+    if (!priceVal.valid) {
+        showFieldError('pricePerM2', priceVal.message);
+        isValid = false;
+    } else {
+        clearFieldError('pricePerM2');
+    }
+    
+    // Проверка общей площади
+    if (mainLengthVal.valid && mainWidthVal.valid) {
+        let totalArea = mainLengthVal.value * mainWidthVal.value;
+        if (hasLeg && legLengthVal.valid && legWidthVal.valid) {
+            totalArea += legLengthVal.value * legWidthVal.value;
+        }
+        
+        if (totalArea < VALIDATION.MIN_TOTAL_AREA) {
+            showFieldError('mainLength', `Общая площадь слишком мала (минимум ${VALIDATION.MIN_TOTAL_AREA} м²)`);
+            isValid = false;
+        }
+        
+        if (totalArea > VALIDATION.MAX_TOTAL_AREA) {
+            showFieldError('mainLength', `Общая площадь слишком большая (максимум ${VALIDATION.MAX_TOTAL_AREA} м²)`);
+            isValid = false;
+        }
+    }
+    
+    return isValid;
+}
+
 // Инициализация приложения
 let calculator = null;
 let currentRoom = null;
@@ -35,7 +198,7 @@ function calculateAdaptiveScale() {
     return scale;
 }
 
-// Получение параметров из формы
+// Получение параметров из формы с валидацией
 function getInputParameters() {
     const mainLength = parseFloat(document.getElementById('mainLength').value);
     const mainWidth = parseFloat(document.getElementById('mainWidth').value);
@@ -43,6 +206,13 @@ function getInputParameters() {
     const legLength = hasLeg ? parseFloat(document.getElementById('legLength').value) : 0;
     const legWidth = hasLeg ? parseFloat(document.getElementById('legWidth').value) : 0;
     const pricePerM2 = parseFloat(document.getElementById('pricePerM2').value || '0');
+    
+    // Проверка на валидность значений
+    if (isNaN(mainLength) || isNaN(mainWidth) || 
+        (hasLeg && (isNaN(legLength) || isNaN(legWidth))) || 
+        isNaN(pricePerM2)) {
+        throw new Error('Некорректные значения в форме. Проверьте все поля.');
+    }
     
     return {
         room: new LShapedRoom(mainLength, mainWidth, legLength, legWidth),
@@ -53,11 +223,32 @@ function getInputParameters() {
 
 // Расчет всех схем и выбор лучшей
 function calculateAllSchemes() {
+    // Очистка предыдущих ошибок
+    ['mainLength', 'mainWidth', 'legLength', 'legWidth', 'pricePerM2'].forEach(id => {
+        clearFieldError(id);
+    });
+    
+    // Валидация формы
+    if (!validateForm()) {
+        showUserMessage('Пожалуйста, исправьте ошибки в форме перед расчётом.', 'error');
+        return;
+    }
+    
     try {
         const params = getInputParameters();
+        
         if (!params || !params.room) {
-            console.error('Ошибка получения параметров');
-            return;
+            throw new Error('Не удалось получить параметры помещения');
+        }
+        
+        // Проверка на экстремальные значения
+        const totalArea = params.room.getTotalArea();
+        if (totalArea > VALIDATION.MAX_TOTAL_AREA) {
+            throw new Error(`Площадь помещения слишком большая (${totalArea.toFixed(2)} м²). Максимальное значение: ${VALIDATION.MAX_TOTAL_AREA} м²`);
+        }
+        
+        if (totalArea < VALIDATION.MIN_TOTAL_AREA) {
+            throw new Error(`Площадь помещения слишком мала (${totalArea.toFixed(2)} м²). Минимальное значение: ${VALIDATION.MIN_TOTAL_AREA} м²`);
         }
         
         currentRoom = params.room;
@@ -109,10 +300,45 @@ function calculateAllSchemes() {
         // Обновляем статистику
         updateStatistics(bestScheme.panels, params.pricePerM2);
         updateResultsText(params, bestScheme.panels, bestScheme.name);
+        
     } catch (error) {
         console.error('Ошибка при расчете:', error);
-        alert('Произошла ошибка при расчете. Проверьте консоль браузера (F12).');
+        showUserMessage(error.message || 'Произошла ошибка при расчете. Проверьте введённые данные.', 'error');
     }
+}
+
+// Показ сообщения пользователю
+function showUserMessage(message, type = 'info') {
+    // Удаляем предыдущее сообщение, если есть
+    const existingMsg = document.querySelector('.user-message');
+    if (existingMsg) {
+        existingMsg.remove();
+    }
+    
+    const messageEl = document.createElement('div');
+    messageEl.className = `user-message user-message-${type}`;
+    messageEl.textContent = message;
+    messageEl.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 20px;
+        background: ${type === 'error' ? '#e53e3e' : '#01644f'};
+        color: white;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        max-width: 400px;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(messageEl);
+    
+    // Автоматическое удаление через 5 секунд
+    setTimeout(() => {
+        messageEl.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => messageEl.remove(), 300);
+    }, 5000);
 }
 
 // Отрисовка схемы
@@ -184,7 +410,21 @@ function setupLegToggle() {
 // Обработчики событий
 function setupEventListeners() {
     // Кнопка расчета
-    document.getElementById('calculateBtn').addEventListener('click', calculateAllSchemes);
+    const calculateBtn = document.getElementById('calculateBtn');
+    calculateBtn.addEventListener('click', calculateAllSchemes);
+    
+    // Клавиатурные сокращения: Enter для расчёта
+    document.addEventListener('keydown', (e) => {
+        // Enter запускает расчёт, если фокус не на текстовом поле (textarea)
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            const activeElement = document.activeElement;
+            // Если фокус на поле ввода или кнопке, выполняем расчёт
+            if (activeElement.tagName === 'INPUT' || activeElement === calculateBtn) {
+                e.preventDefault();
+                calculateAllSchemes();
+            }
+        }
+    });
     
     // Чекбокс автоматического расчета
     document.getElementById('autoCalc').addEventListener('change', () => {
@@ -198,7 +438,72 @@ function setupEventListeners() {
     inputs.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
+            // Форматирование чисел с двумя знаками после запятой для размерных полей (кроме цены)
+            const isSizeField = (id === 'mainLength' || id === 'mainWidth' || id === 'legLength' || id === 'legWidth');
+            
+            // Форматирование значения при изменении через стрелки или потере фокуса
+            const formatValue = () => {
+                if (isSizeField && element.value !== '') {
+                    const numValue = parseFloat(element.value);
+                    if (!isNaN(numValue)) {
+                        element.value = numValue.toFixed(2);
+                    }
+                }
+            };
+            
+            // Валидация при вводе
+            element.addEventListener('input', () => {
+                // Очищаем ошибку при начале ввода
+                clearFieldError(id);
+                
+                // Если включен автоматический расчёт, запускаем после валидации
+                if (document.getElementById('autoCalc').checked && calculator) {
+                    // Небольшая задержка для завершения ввода
+                    clearTimeout(window.inputTimeout);
+                    window.inputTimeout = setTimeout(() => {
+                        if (validateForm()) {
+                            calculateAllSchemes();
+                        }
+                    }, 500);
+                }
+            });
+            
+            // Валидация при потере фокуса
+            element.addEventListener('blur', () => {
+                const value = element.value;
+                let isValid = true;
+                
+                if (value !== '') {
+                    if (id === 'mainLength' || id === 'mainWidth' || id === 'legLength' || id === 'legWidth') {
+                        const val = validateNumber(value, VALIDATION.MIN_ROOM_SIZE, VALIDATION.MAX_ROOM_SIZE, '');
+                        if (!val.valid) {
+                            showFieldError(id, val.message);
+                            isValid = false;
+                        } else {
+                            // Форматируем значение с двумя знаками после запятой
+                            formatValue();
+                        }
+                    } else if (id === 'pricePerM2') {
+                        const val = validateNumber(value, VALIDATION.MIN_PRICE, VALIDATION.MAX_PRICE, '');
+                        if (!val.valid) {
+                            showFieldError(id, val.message);
+                            isValid = false;
+                        }
+                    }
+                }
+                
+                if (isValid) {
+                    clearFieldError(id);
+                }
+            });
+            
+            // Форматирование при изменении через стрелки (событие change)
             element.addEventListener('change', () => {
+                // Форматируем значение для размерных полей
+                if (isSizeField) {
+                    formatValue();
+                }
+                
                 if (calculator && document.getElementById('autoCalc').checked) {
                     calculateAllSchemes();
                 }
@@ -397,6 +702,18 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeVisualizers();
     setupLegToggle();
     setupEventListeners();
+    
+    // Форматирование начальных значений полей с размерностями (с двумя знаками после запятой)
+    const sizeFields = ['mainLength', 'mainWidth', 'legLength', 'legWidth'];
+    sizeFields.forEach(id => {
+        const element = document.getElementById(id);
+        if (element && element.value !== '') {
+            const numValue = parseFloat(element.value);
+            if (!isNaN(numValue)) {
+                element.value = numValue.toFixed(2);
+            }
+        }
+    });
     // Тема: загрузка и обработчик для переключателя checkbox
     try {
         const savedTheme = localStorage.getItem('mf_theme');

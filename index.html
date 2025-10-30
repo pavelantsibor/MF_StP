@@ -21,12 +21,18 @@
                 <div class="card">
                     <h2>Площадь потолка</h2>
                     <div class="form-group">
-                        <label for="mainLength">Длина помещения (м):</label>
-                        <input type="number" id="mainLength" value="5.0" step="0.1" min="0.1">
+                        <label for="mainLength" title="Минимальное значение: 0.1 м, максимальное: 100 м">
+                            Длина помещения (м):
+                        </label>
+                        <input type="number" id="mainLength" value="5.0" step="0.01" min="0.1" max="100" required>
+                        <span class="error-message" id="mainLengthError"></span>
                     </div>
                     <div class="form-group">
-                        <label for="mainWidth">Ширина помещения (м):</label>
-                        <input type="number" id="mainWidth" value="5.0" step="0.1" min="0.1">
+                        <label for="mainWidth" title="Минимальное значение: 0.1 м, максимальное: 100 м">
+                            Ширина помещения (м):
+                        </label>
+                        <input type="number" id="mainWidth" value="5.0" step="0.01" min="0.1" max="100" required>
+                        <span class="error-message" id="mainWidthError"></span>
                     </div>
                     <div class="form-group">
                         <label>
@@ -36,12 +42,18 @@
                     </div>
                     <div id="legFields" class="leg-fields" style="display: none;">
                         <div class="form-group">
-                            <label for="legLength">Длина выступа (м):</label>
-                            <input type="number" id="legLength" value="2" step="0.01" min="0.1">
+                            <label for="legLength" title="Минимальное значение: 0.1 м, максимальное: 100 м">
+                                Длина выступа (м):
+                            </label>
+                            <input type="number" id="legLength" value="2" step="0.01" min="0.1" max="100" required>
+                            <span class="error-message" id="legLengthError"></span>
                         </div>
                         <div class="form-group">
-                            <label for="legWidth">Ширина выступа (м):</label>
-                            <input type="number" id="legWidth" value="2" step="0.01" min="0.1">
+                            <label for="legWidth" title="Минимальное значение: 0.1 м, максимальное: 100 м">
+                                Ширина выступа (м):
+                            </label>
+                            <input type="number" id="legWidth" value="2" step="0.01" min="0.1" max="100" required>
+                            <span class="error-message" id="legWidthError"></span>
                         </div>
                     </div>
                 </div>
@@ -49,7 +61,9 @@
                 <div class="card">
                     <h2>Параметры панелей</h2>
                     <div class="form-group">
-                        <label>Размер панели:</label>
+                        <label title="Размер панели учитывает эффективную площадь с учётом шип-паз соединения (0,735 × 0,535 м для расчёта)">
+                            Размер панели:
+                        </label>
                         <div class="static-field">0,75 м × 0,55 м</div>
                     </div>
                 </div>
@@ -57,8 +71,11 @@
                 <div class="card">
                     <h2>Экономика</h2>
                     <div class="form-group">
-                        <label for="pricePerM2">Стоимость за м² (руб):</label>
-                        <input type="number" id="pricePerM2" value="6000" step="1" min="0">
+                        <label for="pricePerM2" title="Введите стоимость одного квадратного метра панелей">
+                            Стоимость за м² (руб):
+                        </label>
+                        <input type="number" id="pricePerM2" value="6000" step="1" min="0" max="1000000">
+                        <span class="error-message" id="pricePerM2Error"></span>
                     </div>
                 </div>
 
@@ -131,6 +148,10 @@
                         </div>
                         <div class="stat-card-button">
                             <button class="btn-print" onclick="saveToPDF()">
+                                <svg class="btn-print-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 9L12 14L17 9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M7 14L12 19L17 14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
                                 СКАЧАТЬ РАСЧЁТ
                             </button>
                         </div>

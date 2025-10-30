@@ -48,7 +48,7 @@ body {
     background: var(--bg-page);
     color: var(--text-primary);
     min-height: 100vh;
-    padding: 20px;
+    padding: 16px;
     line-height: 1.6;
 }
 
@@ -87,8 +87,8 @@ html {
 
 .header {
     text-align: center;
-    margin-bottom: 30px;
-    padding: 20px;
+    margin-bottom: 24px;
+    padding: 16px;
     background: #01644f;
     border-radius: 16px;
     box-shadow: var(--shadow);
@@ -210,22 +210,22 @@ html {
 .card {
     background: var(--bg-card);
     border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 16px;
+    margin-bottom: 16px;
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
 }
 
 .card h2 {
     font-size: 1.1rem;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     color: var(--heading-color);
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
+    padding-bottom: 8px;
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .form-group label {
@@ -233,11 +233,34 @@ html {
     margin-bottom: 5px;
     color: var(--text-secondary);
     font-size: 0.95rem;
+    position: relative;
+}
+
+.error-message {
+    display: block;
+    color: #e53e3e;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    min-height: 1.2em;
+}
+
+.form-group input.error {
+    border-color: #e53e3e;
+    box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.12);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    position: relative;
+    cursor: help;
 }
 
 .static-field {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     background: var(--bg-subtle);
     border: 1px dashed var(--border-color);
     border-radius: 10px;
@@ -247,13 +270,24 @@ html {
 .form-group input[type="number"],
 .form-group input[type="text"] {
     width: 100%;
-    padding: 12px 12px;
+    padding: 10px 12px;
     background: var(--bg-subtle);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     color: var(--text-primary);
     font-size: 0.95rem;
     transition: all 0.2s ease;
+}
+
+/* Стили для стрелок прокрутки полей number */
+.form-group input[type="number"]::-webkit-inner-spin-button {
+    opacity: 1;
+    cursor: pointer;
+}
+
+.form-group input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    cursor: pointer;
 }
 
 .form-group input[type="number"]:focus,
@@ -350,7 +384,7 @@ html {
     position: relative;
     background: var(--bg-subtle);
     border-radius: 12px;
-    padding: 20px;
+    padding: 16px;
     min-height: 500px;
     overflow: auto;
     border: 1px solid var(--border-color);
@@ -550,14 +584,14 @@ canvas {
 }
 
 .leg-fields {
-    padding-left: 20px;
+    padding-left: 16px;
     border-left: 2px solid var(--accent-color);
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .scheme-header {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     position: relative;
     display: flex;
     justify-content: space-between;
@@ -589,14 +623,22 @@ body:not(.theme-dark) .scheme-header h2 {
     cursor: pointer;
     transition: transform 0.18s ease, background 0.2s ease, box-shadow 0.2s ease;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
     box-shadow: var(--shadow);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     line-height: 1.3;
+}
+
+.btn-print-arrow {
+    display: inline-flex;
+    align-items: center;
+    color: #ffffff;
+    stroke: #ffffff;
+    flex-shrink: 0;
 }
 
 .btn-print:hover {
@@ -634,5 +676,28 @@ body:not(.theme-dark) .scheme-header h2 {
     width: 16px;
     height: 16px;
     cursor: pointer;
+}
+
+/* Анимации для сообщений */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 

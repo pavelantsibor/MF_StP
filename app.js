@@ -8,13 +8,21 @@ const VALIDATION = {
     MAX_TOTAL_AREA: 5000 // м²
 };
 
+// Утилита: корректный парсинг чисел с запятой или точкой
+function parseLocaleNumber(value) {
+    if (typeof value === 'number') return value;
+    if (value === null || value === undefined) return NaN;
+    const s = String(value).trim().replace(',', '.');
+    return Number(s);
+}
+
 // Функция валидации числа
 function validateNumber(value, min, max, fieldName) {
     if (value === '' || value === null || value === undefined) {
         return { valid: false, message: `Поле "${fieldName}" обязательно для заполнения` };
     }
     
-    const num = parseFloat(value);
+    const num = parseLocaleNumber(value);
     
     if (isNaN(num)) {
         return { valid: false, message: `Поле "${fieldName}" должно содержать число` };
@@ -92,8 +100,11 @@ function validateForm() {
     
     // Размеры выступа (если выбран)
     const hasLeg = document.getElementById('hasLeg').checked;
+    // Объявляем заранее, чтобы использовать ниже без ReferenceError
+    let legLengthVal = { valid: true, value: 0 };
+    let legWidthVal = { valid: true, value: 0 };
     if (hasLeg) {
-        const legLengthVal = validateNumber(
+        legLengthVal = validateNumber(
             document.getElementById('legLength').value,
             VALIDATION.MIN_ROOM_SIZE,
             VALIDATION.MAX_ROOM_SIZE,
@@ -106,7 +117,7 @@ function validateForm() {
             clearFieldError('legLength');
         }
         
-        const legWidthVal = validateNumber(
+        legWidthVal = validateNumber(
             document.getElementById('legWidth').value,
             VALIDATION.MIN_ROOM_SIZE,
             VALIDATION.MAX_ROOM_SIZE,
@@ -200,12 +211,12 @@ function calculateAdaptiveScale() {
 
 // Получение параметров из формы с валидацией
 function getInputParameters() {
-    const mainLength = parseFloat(document.getElementById('mainLength').value);
-    const mainWidth = parseFloat(document.getElementById('mainWidth').value);
+    const mainLength = parseLocaleNumber(document.getElementById('mainLength').value);
+    const mainWidth = parseLocaleNumber(document.getElementById('mainWidth').value);
     const hasLeg = document.getElementById('hasLeg').checked;
-    const legLength = hasLeg ? parseFloat(document.getElementById('legLength').value) : 0;
-    const legWidth = hasLeg ? parseFloat(document.getElementById('legWidth').value) : 0;
-    const pricePerM2 = parseFloat(document.getElementById('pricePerM2').value || '0');
+    const legLength = hasLeg ? parseLocaleNumber(document.getElementById('legLength').value) : 0;
+    const legWidth = hasLeg ? parseLocaleNumber(document.getElementById('legWidth').value) : 0;
+    const pricePerM2 = parseLocaleNumber(document.getElementById('pricePerM2').value || '0');
     
     // Проверка на валидность значений
     if (isNaN(mainLength) || isNaN(mainWidth) || 
@@ -394,17 +405,49 @@ function updateResultsText(params, panels, schemeName) {
 function setupLegToggle() {
     const hasLegCheckbox = document.getElementById('hasLeg');
     const legFields = document.getElementById('legFields');
+    const legLengthInput = document.getElementById('legLength');
+    const legWidthInput = document.getElementById('legWidth');
+
+    const ensureLegDefaults = () => {
+        // Если значения пустые или нечисловые — подставляем минимум
+        if (!legLengthInput.value || isNaN(parseLocaleNumber(legLengthInput.value))) {
+            legLengthInput.value = VALIDATION.MIN_ROOM_SIZE.toFixed(2);
+        }
+        if (!legWidthInput.value || isNaN(parseLocaleNumber(legWidthInput.value))) {
+            legWidthInput.value = VALIDATION.MIN_ROOM_SIZE.toFixed(2);
+        }
+        // Снимаем ошибки, если были
+        clearFieldError('legLength');
+        clearFieldError('legWidth');
+    };
     
     hasLegCheckbox.addEventListener('change', () => {
         if (hasLegCheckbox.checked) {
             legFields.style.display = 'block';
+            ensureLegDefaults();
         } else {
             legFields.style.display = 'none';
         }
-        if (calculator) {
+        // Всегда выполняем пересчёт при переключении типа помещения
+        calculateAllSchemes();
+    });
+
+    // Пересчёт при изменении полей выступа, когда включён чекбокс (даже если авторасчёт выключен)
+    const recalcIfLegEnabled = () => {
+        if (hasLegCheckbox.checked) {
+            // Поддержим валидность на лету
+            ensureLegDefaults();
             calculateAllSchemes();
         }
-    });
+    };
+    if (legLengthInput) {
+        legLengthInput.addEventListener('blur', recalcIfLegEnabled);
+        legLengthInput.addEventListener('change', recalcIfLegEnabled);
+    }
+    if (legWidthInput) {
+        legWidthInput.addEventListener('blur', recalcIfLegEnabled);
+        legWidthInput.addEventListener('change', recalcIfLegEnabled);
+    }
 }
 
 // Обработчики событий
@@ -428,9 +471,8 @@ function setupEventListeners() {
     
     // Чекбокс автоматического расчета
     document.getElementById('autoCalc').addEventListener('change', () => {
-        if (document.getElementById('autoCalc').checked && calculator) {
-            calculateAllSchemes();
-        }
+        // При включении/выключении — сразу пересчитать
+        calculateAllSchemes();
     });
     
     // Изменение параметров автоматически перерисовывает (если включен автоматический расчёт)
@@ -444,7 +486,7 @@ function setupEventListeners() {
             // Форматирование значения при изменении через стрелки или потере фокуса
             const formatValue = () => {
                 if (isSizeField && element.value !== '') {
-                    const numValue = parseFloat(element.value);
+                    const numValue = parseLocaleNumber(element.value);
                     if (!isNaN(numValue)) {
                         element.value = numValue.toFixed(2);
                     }
@@ -457,7 +499,7 @@ function setupEventListeners() {
                 clearFieldError(id);
                 
                 // Если включен автоматический расчёт, запускаем после валидации
-                if (document.getElementById('autoCalc').checked && calculator) {
+                if (document.getElementById('autoCalc').checked) {
                     // Небольшая задержка для завершения ввода
                     clearTimeout(window.inputTimeout);
                     window.inputTimeout = setTimeout(() => {
@@ -504,7 +546,8 @@ function setupEventListeners() {
                     formatValue();
                 }
                 
-                if (calculator && document.getElementById('autoCalc').checked) {
+                // При изменении значений — пересчитать, если включён авторасчёт
+                if (document.getElementById('autoCalc').checked) {
                     calculateAllSchemes();
                 }
             });
@@ -708,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sizeFields.forEach(id => {
         const element = document.getElementById(id);
         if (element && element.value !== '') {
-            const numValue = parseFloat(element.value);
+            const numValue = parseLocaleNumber(element.value);
             if (!isNaN(numValue)) {
                 element.value = numValue.toFixed(2);
             }

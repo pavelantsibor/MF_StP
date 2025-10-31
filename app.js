@@ -393,12 +393,12 @@ function updateResultsText(params, panels, schemeName) {
     lines.push(`Площадь помещения: ${roomArea.toFixed(2)} м²`);
     lines.push('');
     lines.push(`Всего панелей: ${stats.total}  | с 5% запасом: ${stats.withReserve}`);
-    lines.push(`Горизонтальных: ${stats.horizontal}`);
-    lines.push(`Вертикальных: ${stats.vertical}`);
     lines.push(`Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)`);
     lines.push(`Общая стоимость: ${stats.totalCost.toLocaleString('ru-RU')} ₽`);
 
-    resultsEl.textContent = lines.join('\n');
+    // Используем innerHTML для форматирования жирным текстом "Общая стоимость:"
+    const text = lines.join('\n');
+    resultsEl.innerHTML = text.replace(/Общая стоимость:/g, '<strong>Общая стоимость:</strong>');
 }
 
 // Управление чекбоксом выступа
@@ -585,8 +585,6 @@ async function saveToPDF() {
         const roomArea = window.currentParams.room.getTotalArea();
         const stats = window.currentBestScheme.stats;
         const coveragePercent = ((parseFloat(stats.coverageArea) / roomArea) * 100).toFixed(1);
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('ru-RU') + ' ' + now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         
         // Собираем параметры помещения
         let roomParams = 'Размеры: ' + window.currentParams.room.mainLength.toFixed(2) + ' × ' + window.currentParams.room.mainWidth.toFixed(2) + ' м';
@@ -597,11 +595,35 @@ async function saveToPDF() {
         // Генерируем QR-код через API (используем img src для встраивания)
         const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://stp-multiframe.ru/';
         
+        // Загружаем изображения через fetch для избежания проблем с CORS
+        const loadImageAsBase64 = async (url) => {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                console.warn('Не удалось загрузить изображение:', url, e);
+                return null;
+            }
+        };
+        
+        // Загружаем логотип и QR-код как base64
+        const logoBase64 = await loadImageAsBase64('logo.png');
+        const qrBase64 = await loadImageAsBase64(qrImageUrl);
+        
         pdfContainer.innerHTML = `
-            <div style="position: relative; height: 297mm; display: flex; flex-direction: column;">
+            <div style="position: relative; height: 297mm; display: flex; flex-direction: column; padding-bottom: 140px;">
                 <div>
                     <div style="background: ${brandColor}; color: white; padding: 18px; text-align: left;">
-                        <div style="font-size: 30px; font-weight: bold; margin-bottom: 6px;">MultiFRAME</div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                            ${logoBase64 ? `<img src="${logoBase64}" alt="StP" style="height: 45px; width: auto; object-fit: contain;" />` : ''}
+                            <div style="font-size: 30px; font-weight: bold;">MultiFRAME</div>
+                        </div>
                         <div style="font-size: 14px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
                             Звукоизоляционная система для потолка
                         </div>
@@ -630,8 +652,6 @@ async function saveToPDF() {
                             </h2>
                             <div style="font-size: 12px; line-height: 1.6; color: #444; padding-left: 10px;">
                                 <div>Всего панелей: ${stats.total} шт. (с запасом 5%: ${stats.withReserve} шт.)</div>
-                                <div>Горизонтальных панелей: ${stats.horizontal} шт.</div>
-                                <div>Вертикальных панелей: ${stats.vertical} шт.</div>
                                 <div>Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)</div>
                                 <div style="font-weight: bold; color: ${brandColor}; font-size: 14px; margin-top: 6px;">
                                     Общая стоимость: ${stats.totalCost.toLocaleString('ru-RU')} ₽
@@ -650,26 +670,23 @@ async function saveToPDF() {
                     </div>
                 </div>
                 
-                <div style="margin-top: auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px; border-top: 1px solid ${brandColor};">
+                <div style="margin-top: auto; position: absolute; bottom: 0; left: 0; right: 0; background: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-top: 1px solid ${brandColor};">
                         <div style="flex: 1;">
-                            <div style="font-size: 11px; font-weight: bold; color: ${brandColor}; margin-bottom: 6px;">Контакты:</div>
-                            <div style="font-size: 11px; line-height: 1.6; color: #444;">
-                                <div>Сайт: https://stp-multiframe.ru/</div>
+                            <div style="font-size: 13px; font-weight: bold; color: ${brandColor}; margin-bottom: 6px;">Контакты:</div>
+                            <div style="font-size: 13px; line-height: 1.6; color: #444;">
+                                <div>Сайт: stp-multiframe.ru</div>
                                 <div>Офис: г. Иваново, ул. Смирнова, д. 74</div>
                                 <div>Производитель: ООО "Стандартпласт"</div>
                                 <div>Email: stp-russia@stplus.ru</div>
                             </div>
                         </div>
-                        <div style="text-align: center; margin-left: 20px;">
-                            <img src="${qrImageUrl}" style="width: 90px; height: 90px; display: block; margin: 0;" />
-                            <div style="font-size: 10px; color: #666; margin-top: 6px; text-align: center;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-left: 20px;">
+                            <div style="font-size: 11px; color: #666; text-align: right;">
                                 Сканируйте<br>для перехода<br>на сайт
                             </div>
+                            ${qrBase64 ? `<img src="${qrBase64}" style="width: 90px; height: 90px; display: block; margin: 0;" />` : ''}
                         </div>
-                    </div>
-                    <div style="text-align: center; font-size: 10px; color: #999; padding: 10px 20px; border-top: 1px solid #eee;">
-                        Документ создан: ${dateStr}
                     </div>
                 </div>
             </div>
@@ -704,6 +721,8 @@ async function saveToPDF() {
         const canvasImg = await html2canvas(pdfContainer, {
             scale: 2,
             useCORS: true,
+            allowTaint: false,
+            foreignObjectRendering: false,
             logging: false,
             backgroundColor: '#ffffff',
             width: pdfContainer.offsetWidth,
@@ -731,7 +750,7 @@ async function saveToPDF() {
         document.body.removeChild(pdfContainer);
         
         // Сохраняем файл
-        const fileName = 'MultiFrame_Расчет_' + now.toLocaleDateString('ru-RU').replace(/\./g, '-') + '.pdf';
+        const fileName = 'MultiFrame_Расчет.pdf';
         doc.save(fileName);
         
     } catch (error) {

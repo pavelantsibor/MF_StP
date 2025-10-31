@@ -418,6 +418,12 @@ body.theme-dark .form-group input[type="text"]:focus {
     min-height: 500px;
     overflow: auto;
     border: 1px solid var(--border-color);
+    width: 100%;
+}
+
+#resultsText strong {
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 .canvas-wrapper {
@@ -437,8 +443,7 @@ canvas {
     border-radius: 10px;
     background: #ffffff;
     box-shadow: var(--shadow);
-    max-width: 100%;
-    height: auto;
+    display: block;
 }
 
 .canvas-controls {
@@ -583,8 +588,7 @@ canvas {
     }
 
     canvas {
-        max-width: 100%;
-        height: auto;
+        display: block;
     }
 
     .icon-btn {

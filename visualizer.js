@@ -177,7 +177,7 @@ class SchemeVisualizer {
             // Номер панели
             if (showNumbers) {
                 this.ctx.fillStyle = '#ffffff';
-                this.ctx.font = `bold ${Math.max(10, 12 * this.zoom)}px Arial`;
+                this.ctx.font = `bold ${Math.max(14, 16 * this.zoom)}px Arial`;
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
                 this.ctx.fillText(
@@ -208,14 +208,14 @@ class SchemeVisualizer {
         const baseX = 50;
         const baseY = 50;
         const offset = 18;      // отступ от контура
-        const arrowSize = 7 * Math.max(1, this.zoom);
+        const arrowSize = 8 * Math.max(1, this.zoom);
 
         ctx.save();
         // Цвет стрелок и подписей — фирменный (как у заголовка)
         ctx.strokeStyle = '#01644f';
         ctx.fillStyle = '#01644f';
-        ctx.lineWidth = 1.2;
-        ctx.font = `${Math.max(11, 12 * this.zoom)}px Arial`;
+        ctx.lineWidth = 2;
+        ctx.font = `bold ${Math.max(12, 14 * this.zoom)}px Arial`;
 
         // Линия размера со стрелками внутрь
         const drawDimLine = (x1, y1, x2, y2) => {

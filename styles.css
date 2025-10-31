@@ -650,7 +650,7 @@ body:not(.theme-dark) .scheme-header h2 {
     color: #ffffff;
     border: none;
     border-radius: 8px;
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.18s ease, background 0.2s ease, box-shadow 0.2s ease;

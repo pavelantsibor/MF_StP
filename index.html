@@ -36,35 +36,35 @@
                         <label for="mainLength" title="Минимальное значение: 0.1 м, максимальное: 100 м">
                             Длина помещения (м):
                         </label>
-                        <input type="number" id="mainLength" value="5.0" step="0.01" min="0.1" max="100" required>
+                        <input type="number" id="mainLength" value="5.00" step="0.01" min="0.1" max="100" required>
                         <span class="error-message" id="mainLengthError"></span>
                     </div>
                     <div class="form-group">
                         <label for="mainWidth" title="Минимальное значение: 0.1 м, максимальное: 100 м">
                             Ширина помещения (м):
                         </label>
-                        <input type="number" id="mainWidth" value="5.0" step="0.01" min="0.1" max="100" required>
+                        <input type="number" id="mainWidth" value="5.00" step="0.01" min="0.1" max="100" required>
                         <span class="error-message" id="mainWidthError"></span>
                     </div>
                     <div class="form-group">
                         <label>
-                            <input type="checkbox" id="hasLeg">
+                            <input type="checkbox" id="hasLeg" checked>
                             Г-образное помещение (с выступом)
                         </label>
                     </div>
-                    <div id="legFields" class="leg-fields" style="display: none;">
+                    <div id="legFields" class="leg-fields" style="display: block;">
                         <div class="form-group">
                             <label for="legLength" title="Минимальное значение: 0.1 м, максимальное: 100 м">
                                 Длина выступа (м):
                             </label>
-                            <input type="number" id="legLength" value="2" step="0.01" min="0.1" max="100" required>
+                            <input type="number" id="legLength" value="1.50" step="0.01" min="0.1" max="100" required>
                             <span class="error-message" id="legLengthError"></span>
                         </div>
                         <div class="form-group">
                             <label for="legWidth" title="Минимальное значение: 0.1 м, максимальное: 100 м">
                                 Ширина выступа (м):
                             </label>
-                            <input type="number" id="legWidth" value="2" step="0.01" min="0.1" max="100" required>
+                            <input type="number" id="legWidth" value="2.00" step="0.01" min="0.1" max="100" required>
                             <span class="error-message" id="legWidthError"></span>
                         </div>
                     </div>
@@ -143,7 +143,7 @@
                             <div class="stat-value" id="coverageArea">0 м²</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Общая стоимость</div>
+                            <div class="stat-label">Общая стоимость материалов</div>
                             <div class="stat-value" id="totalCost">0 ₽</div>
                         </div>
                         <div class="stat-card-button">

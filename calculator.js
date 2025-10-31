@@ -106,11 +106,8 @@ class PanelCalculator {
 
     // Поиск доступного номера панели
     findAvailablePanelNumber(panels) {
-        if (panels.length === 0) return 1;
-        const numbers = panels.map(p => p.number).sort((a, b) => a - b);
-        for (let i = 1; i <= numbers.length + 1; i++) {
-            if (!numbers.includes(i)) return i;
-        }
+        // Просто возвращаем следующий номер на основе количества панелей
+        // Это гарантирует последовательную нумерацию без пропусков
         return panels.length + 1;
     }
 
@@ -314,11 +311,12 @@ class PanelCalculator {
                     x, y,
                     this.panelLength, this.panelWidth,
                     Orientation.HORIZONTAL,
-                    panelNumber++
+                    panelNumber
                 );
                 
                 if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) &&
                     !this.checkPanelCollision(panel, panels)) {
+                    panel.number = panelNumber++;
                     panels.push(panel);
                 }
                 
@@ -374,11 +372,12 @@ class PanelCalculator {
                     x, y,
                     this.panelWidth, this.panelLength,
                     Orientation.VERTICAL,
-                    panelNumber++
+                    panelNumber
                 );
                 
                 if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) &&
                     !this.checkPanelCollision(panel, panels)) {
+                    panel.number = panelNumber++;
                     panels.push(panel);
                 }
                 
@@ -415,10 +414,13 @@ class PanelCalculator {
             }
             
             if (maxYForColumn >= this.panelLength) {
-                const panel = new Panel(x, 0, this.panelWidth, this.panelLength, Orientation.VERTICAL, panelNumber++);
+                const panel = new Panel(x, 0, this.panelWidth, this.panelLength, Orientation.VERTICAL, panelNumber);
                 if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) && 
                     !this.checkPanelCollision(panel, panels)) {
+                    panel.number = panelNumber++;
                     panels.push(panel);
+                } else {
+                    panelNumber++;
                 }
             }
             x += this.panelWidth;
@@ -441,10 +443,13 @@ class PanelCalculator {
             
             // Размещаем горизонтальные панели в этой строке
             while (x + this.panelLength <= maxXForRow + 1e-6) {
-                const panel = new Panel(x, y, this.panelLength, this.panelWidth, Orientation.HORIZONTAL, panelNumber++);
+                const panel = new Panel(x, y, this.panelLength, this.panelWidth, Orientation.HORIZONTAL, panelNumber);
                 if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) && 
                     !this.checkPanelCollision(panel, panels)) {
+                    panel.number = panelNumber++;
                     panels.push(panel);
+                } else {
+                    panelNumber++;
                 }
                 x += this.panelLength;
             }

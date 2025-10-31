@@ -384,7 +384,7 @@ function updateResultsText(params, panels, schemeName) {
     const coveragePercent = ((parseFloat(stats.coverageArea) / roomArea) * 100).toFixed(1);
 
     const lines = [];
-    lines.push(`Размер панели: 0,75 × 0,55 м`);
+    lines.push(`Размер панели: 0,75×0,55 м`);
     if (params.hasLeg) {
         lines.push(`Размер помещения: ${params.room.mainLength.toFixed(2)}×${params.room.mainWidth.toFixed(2)} м (осн.) + ${params.room.legLength.toFixed(2)}×${params.room.legWidth.toFixed(2)} м (выступ)`);
     } else {
@@ -394,11 +394,11 @@ function updateResultsText(params, panels, schemeName) {
     lines.push('');
     lines.push(`Всего панелей: ${stats.total}  | с 5% запасом: ${stats.withReserve}`);
     lines.push(`Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)`);
-    lines.push(`Общая стоимость: ${stats.totalCost.toLocaleString('ru-RU')} ₽`);
+    lines.push(`Общая стоимость материалов: ${stats.totalCost.toLocaleString('ru-RU')} ₽`);
 
-    // Используем innerHTML для форматирования жирным текстом "Общая стоимость:"
+    // Используем innerHTML для форматирования жирным текстом "Общая стоимость материалов:"
     const text = lines.join('\n');
-    resultsEl.innerHTML = text.replace(/Общая стоимость:/g, '<strong>Общая стоимость:</strong>');
+    resultsEl.innerHTML = text.replace(/Общая стоимость материалов:/g, '<strong>Общая стоимость материалов:</strong>');
 }
 
 // Управление чекбоксом выступа
@@ -643,7 +643,7 @@ async function saveToPDF() {
                                 <div>Размеры: ${window.currentParams.room.mainLength.toFixed(2)} × ${window.currentParams.room.mainWidth.toFixed(2)} м${window.currentParams.hasLeg ? ' (основное)' : ''}</div>
                                 ${window.currentParams.hasLeg ? '<div>+ ' + window.currentParams.room.legLength.toFixed(2) + ' × ' + window.currentParams.room.legWidth.toFixed(2) + ' м (выступ)</div>' : ''}
                                 <div>Площадь помещения: ${roomArea.toFixed(2)} м²</div>
-                                <div>Размер панели: 0,75 × 0,55 м</div>
+                                <div>Размер панели: 0,75×0,55 м</div>
                             </div>
                         </div>
                         
@@ -655,7 +655,7 @@ async function saveToPDF() {
                                 <div>Всего панелей: ${stats.total} шт. (с запасом 5%: ${stats.withReserve} шт.)</div>
                                 <div>Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)</div>
                                 <div style="font-weight: bold; color: ${brandColor}; font-size: 14px; margin-top: 6px;">
-                                    Общая стоимость: ${stats.totalCost.toLocaleString('ru-RU')} ₽
+                                    Общая стоимость материалов: ${stats.totalCost.toLocaleString('ru-RU')} ₽
                                 </div>
                             </div>
                         </div>

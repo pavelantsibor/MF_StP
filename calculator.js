@@ -49,24 +49,6 @@ class PanelCalculator {
         this.panelWidth = EFFECTIVE_PANEL_WIDTH;
     }
 
-    // Проверка, находится ли панель внутри Г-образной комнаты
-    isPanelInsideRoom(x, y, width, height) {
-        // Проверяем все четыре угла панели
-        const corners = [
-            { x: x, y: y },                    // верхний левый
-            { x: x + width, y: y },            // верхний правый
-            { x: x, y: y + height },           // нижний левый
-            { x: x + width, y: y + height }    // нижний правый
-        ];
-        
-        for (const corner of corners) {
-            if (!this.isPointInsideRoom(corner.x, corner.y)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
     // Проверка, находится ли точка внутри Г-образной комнаты
     isPointInsideRoom(x, y) {
         // Основная часть
@@ -86,7 +68,25 @@ class PanelCalculator {
         return false;
     }
 
-    // Проверка коллизий панелей
+    // Проверка, находится ли панель полностью внутри комнаты
+    isPanelInsideRoom(x, y, width, height) {
+        // Проверяем все четыре угла панели
+        const corners = [
+            { x: x, y: y },                    // верхний левый
+            { x: x + width, y: y },            // верхний правый
+            { x: x, y: y + height },           // нижний левый
+            { x: x + width, y: y + height }    // нижний правый
+        ];
+        
+        for (const corner of corners) {
+            if (!this.isPointInsideRoom(corner.x, corner.y)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Проверка коллизий панелей (пересечение)
     checkPanelCollision(panel, panels) {
         for (const existingPanel of panels) {
             if (this.rectanglesOverlap(
@@ -114,43 +114,222 @@ class PanelCalculator {
         return panels.length + 1;
     }
 
-    // Схема 1: Горизонтальная укладка
-    calculateScheme1() {
+    // Размещение панелей в прямоугольной области (основная часть или выступ)
+    placePanelsInRectangularArea(startX, startY, length, width, startPanelNumber, existingPanels) {
         const panels = [];
-        let panelNumber = 1;
-
-        // Определяем максимальные размеры для сканирования
-        const maxX = Math.max(this.room.mainLength, this.room.legLength);
-        const maxY = this.room.mainWidth + this.room.legWidth;
-
-        // Сканируем всё пространство построчно (по Y)
-        let y = 0;
-        while (y < maxY) {
-            let x = 0;
-            while (x < maxX) {
+        let panelNumber = startPanelNumber;
+        
+        // Пробуем разные стратегии размещения для максимального покрытия
+        
+        // Стратегия 1: Горизонтальные панели
+        let horizontalPanels = [];
+        let y = startY;
+        while (y + this.panelWidth <= startY + width + 1e-6) {
+            let x = startX;
+            while (x + this.panelLength <= startX + length + 1e-6) {
                 const panel = new Panel(
                     x, y,
                     this.panelLength, this.panelWidth,
                     Orientation.HORIZONTAL,
-                    panelNumber
+                    panelNumber++
                 );
                 
-                // Проверяем, что панель полностью внутри комнаты и не пересекается с другими
-                if (this.isPanelInsideRoom(x, y, this.panelLength, this.panelWidth) &&
-                    !this.checkPanelCollision(panel, panels)) {
-                    panels.push(panel);
-                    panelNumber++;
+                if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) &&
+                    !this.checkPanelCollision(panel, existingPanels)) {
+                    horizontalPanels.push(panel);
                 }
-                
                 x += this.panelLength;
             }
             y += this.panelWidth;
         }
+        
+        // Стратегия 2: Вертикальные панели
+        let verticalPanels = [];
+        panelNumber = startPanelNumber;
+        let x = startX;
+        while (x + this.panelWidth <= startX + length + 1e-6) {
+            let y = startY;
+            while (y + this.panelLength <= startY + width + 1e-6) {
+                const panel = new Panel(
+                    x, y,
+                    this.panelWidth, this.panelLength,
+                    Orientation.VERTICAL,
+                    panelNumber++
+                );
+                
+                if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) &&
+                    !this.checkPanelCollision(panel, existingPanels)) {
+                    verticalPanels.push(panel);
+                }
+                y += this.panelLength;
+            }
+            x += this.panelWidth;
+        }
+        
+        // Выбираем стратегию с большим количеством панелей
+        return horizontalPanels.length >= verticalPanels.length ? horizontalPanels : verticalPanels;
+    }
 
-        // Оптимизация правой кромки: для прямоугольной и Г‑образной комнаты
-        let optimized = this.optimizeRightEdgesForLShape(panels);
-        // Дополнительная оптимизация высоты выступа: замена нижнего горизонтального ряда на вертикальный пояс
-        optimized = this.optimizeLegBottomWithVerticalBand(optimized);
+    // Оптимизация: заполнение всех свободных областей для максимального покрытия
+    maximizeCoverage(panels) {
+        let optimizedPanels = [...panels];
+        const maxX = Math.max(this.room.mainLength, this.room.legLength);
+        const maxY = this.room.mainWidth + this.room.legWidth;
+        
+        // Пробуем заполнить все свободные области различными способами
+        
+        // Стратегия 1: Добавляем вертикальные панели в правых областях
+        // Находим самую правую координату существующих панелей
+        let maxPanelX = 0;
+        optimizedPanels.forEach(p => {
+            const rightX = p.x + p.width;
+            if (rightX > maxPanelX) {
+                maxPanelX = rightX;
+            }
+        });
+        
+        // Пробуем добавить вертикальные панели справа
+        let xStart = maxPanelX;
+        let changed = true;
+        let iterations = 0;
+        const maxIterations = 50; // Защита от бесконечного цикла
+        
+        while (changed && iterations < maxIterations) {
+            iterations++;
+            changed = false;
+            
+            // Пробуем добавить вертикальные панели в этой колонке
+            let y = 0;
+            while (y + this.panelLength <= maxY + 1e-6) {
+                const panel = new Panel(
+                    xStart, y,
+                    this.panelWidth, this.panelLength,
+                    Orientation.VERTICAL,
+                    this.findAvailablePanelNumber(optimizedPanels)
+                );
+                
+                // Проверяем пересечение с другими панелями
+                if (!this.checkPanelCollision(panel, optimizedPanels)) {
+                    // КРИТИЧЕСКОЕ: Панель должна полностью помещаться внутри комнаты
+                    if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height)) {
+                        optimizedPanels.push(panel);
+                        changed = true;
+                    }
+                }
+                
+                y += this.panelLength;
+            }
+            
+            xStart += this.panelWidth;
+            
+            // Останавливаемся при достижении границы комнаты
+            if (xStart + this.panelWidth > maxX + 1e-6) {
+                break;
+            }
+        }
+        
+        // Стратегия 2: Добавляем горизонтальные панели в нижних областях
+        // Находим самую нижнюю координату существующих панелей
+        let maxPanelY = 0;
+        optimizedPanels.forEach(p => {
+            const bottomY = p.y + p.height;
+            if (bottomY > maxPanelY) {
+                maxPanelY = bottomY;
+            }
+        });
+        
+        // Пробуем добавить горизонтальные панели снизу
+        let yStart = maxPanelY;
+        changed = true;
+        iterations = 0;
+        
+        while (changed && iterations < maxIterations) {
+            iterations++;
+            changed = false;
+            
+            // Определяем максимальную длину для этой строки
+            let maxXForRow;
+            if (yStart < this.room.mainWidth) {
+                maxXForRow = this.room.mainLength;
+            } else {
+                maxXForRow = this.room.legLength;
+            }
+            
+            // Пробуем добавить горизонтальные панели в этой строке
+            let x = 0;
+            while (x + this.panelLength <= maxXForRow + 1e-6) {
+                const panel = new Panel(
+                    x, yStart,
+                    this.panelLength, this.panelWidth,
+                    Orientation.HORIZONTAL,
+                    this.findAvailablePanelNumber(optimizedPanels)
+                );
+                
+                if (!this.checkPanelCollision(panel, optimizedPanels) &&
+                    this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height)) {
+                    optimizedPanels.push(panel);
+                    changed = true;
+                }
+                
+                x += this.panelLength;
+            }
+            
+            yStart += this.panelWidth;
+            
+            // Останавливаемся при достижении границы комнаты
+            if (yStart + this.panelWidth > maxY + 1e-6) {
+                break;
+            }
+        }
+        
+        return optimizedPanels;
+    }
+
+    // Схема 1: Горизонтальная укладка
+    calculateScheme1() {
+        const panels = [];
+        let panelNumber = 1;
+        
+        // Для Г-образной комнаты размещаем панели единым алгоритмом, чтобы стыковались без промежутков
+        const maxY = this.room.mainWidth + this.room.legWidth;
+        
+        // Размещаем панели построчно от начала до конца (включая выступ)
+        let y = 0;
+        while (y < maxY) {
+            let x = 0;
+            
+            // Определяем максимальную длину для этой строки
+            let maxXForRow;
+            if (y < this.room.mainWidth) {
+                // Это строка основной части
+                maxXForRow = this.room.mainLength;
+            } else {
+                // Это строка выступа
+                maxXForRow = this.room.legLength;
+            }
+            
+            // Размещаем горизонтальные панели в этой строке
+            while (x < maxXForRow) {
+                const panel = new Panel(
+                    x, y,
+                    this.panelLength, this.panelWidth,
+                    Orientation.HORIZONTAL,
+                    panelNumber++
+                );
+                
+                if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) &&
+                    !this.checkPanelCollision(panel, panels)) {
+                    panels.push(panel);
+                }
+                
+                x += this.panelLength;
+            }
+            
+            y += this.panelWidth;
+        }
+        
+        // Оптимизация для максимального покрытия
+        let optimized = this.maximizeCoverage(panels);
         return optimized;
     }
 
@@ -158,104 +337,122 @@ class PanelCalculator {
     calculateScheme2() {
         const panels = [];
         let panelNumber = 1;
-
-        // Определяем максимальные размеры для сканирования
+        
+        // Для Г-образной комнаты размещаем панели единым алгоритмом по столбцам
         const maxX = Math.max(this.room.mainLength, this.room.legLength);
         const maxY = this.room.mainWidth + this.room.legWidth;
-
-        // Сканируем всё пространство по столбцам (по X)
+        
+        // Размещаем вертикальные панели по столбцам от начала до конца
         let x = 0;
         while (x < maxX) {
-            let y = 0;
-            while (y < maxY) {
+            // Определяем максимальную высоту для этого столбца и начальную координату Y
+            let maxYForColumn;
+            let startY = 0;
+            
+            if (x < this.room.legLength && x < this.room.mainLength) {
+                // Столбец проходит через обе части (основную и выступ)
+                maxYForColumn = maxY;
+                startY = 0;
+            } else if (x < this.room.mainLength) {
+                // Столбец только в основной части
+                maxYForColumn = this.room.mainWidth;
+                startY = 0;
+            } else if (x < this.room.legLength) {
+                // Столбец только в выступе
+                maxYForColumn = maxY;
+                startY = this.room.mainWidth;
+            } else {
+                // Столбец вне обеих частей
+                maxYForColumn = 0;
+                startY = 0;
+            }
+            
+            // Размещаем вертикальные панели в этом столбце
+            let y = startY;
+            while (y < maxYForColumn) {
                 const panel = new Panel(
                     x, y,
                     this.panelWidth, this.panelLength,
                     Orientation.VERTICAL,
-                    panelNumber
+                    panelNumber++
                 );
                 
-                // Проверяем, что панель полностью внутри комнаты и не пересекается с другими
-                if (this.isPanelInsideRoom(x, y, this.panelWidth, this.panelLength) &&
+                if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) &&
                     !this.checkPanelCollision(panel, panels)) {
                     panels.push(panel);
-                    panelNumber++;
                 }
                 
                 y += this.panelLength;
             }
+            
             x += this.panelWidth;
         }
-
-        return panels;
+        
+        // Оптимизация для максимального покрытия
+        let optimized = this.maximizeCoverage(panels);
+        return optimized;
     }
 
-    // Схема 3: Комбинированная (верхняя вертикальная полоса + горизонтальные ниже)
+    // Схема 3: Комбинированная (вертикальная полоса сверху + горизонтальные ниже)
     calculateScheme3() {
         const panels = [];
         let panelNumber = 1;
-
-        // 1) Верхняя вертикальная полоса по основной части
-        for (let x = 0; x + this.panelWidth <= this.room.mainLength + 1e-6; x += this.panelWidth) {
-            const p = new Panel(x, 0, this.panelWidth, this.panelLength, Orientation.VERTICAL, panelNumber++);
-            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
-        }
-
-        // 2) Горизонтальные ряды ниже на всей основной части, начиная с Y = panelLength
-        for (let y = this.panelLength; y + this.panelWidth <= this.room.mainWidth + 1e-6; y += this.panelWidth) {
-            for (let x = 0; x + this.panelLength <= this.room.mainLength + 1e-6; x += this.panelLength) {
-                const p = new Panel(x, y, this.panelLength, this.panelWidth, Orientation.HORIZONTAL, panelNumber++);
-                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+        
+        const maxY = this.room.mainWidth + this.room.legWidth;
+        
+        // 1) Верхняя вертикальная полоса по всей длине (основная часть и выступ)
+        let x = 0;
+        const maxXForTop = Math.max(this.room.mainLength, this.room.legLength);
+        while (x + this.panelWidth <= maxXForTop + 1e-6) {
+            // Определяем максимальную высоту для этого столбца в верхней полосе
+            let maxYForColumn;
+            if (x < this.room.mainLength && x < this.room.legLength) {
+                maxYForColumn = Math.min(this.panelLength, this.room.mainWidth + this.room.legWidth);
+            } else if (x < this.room.mainLength) {
+                maxYForColumn = Math.min(this.panelLength, this.room.mainWidth);
+            } else {
+                maxYForColumn = Math.min(this.panelLength, this.room.legWidth);
             }
-        }
-
-        // 3) Если есть выступ: верхняя вертикальная полоса выступа на уровне mainWidth
-        if (this.room.legLength > 0 && this.room.legWidth > 0) {
-            const topY = this.room.mainWidth;
-            for (let x = 0; x + this.panelWidth <= this.room.legLength + 1e-6; x += this.panelWidth) {
-                const p = new Panel(x, topY, this.panelWidth, this.panelLength, Orientation.VERTICAL, panelNumber++);
-                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
-            }
-
-            // Горизонтальные ряды ниже на выступе, начиная с Y = mainWidth + panelLength
-            for (let y = topY + this.panelLength; y + this.panelWidth <= topY + this.room.legWidth + 1e-6; y += this.panelWidth) {
-                for (let x = 0; x + this.panelLength <= this.room.legLength + 1e-6; x += this.panelLength) {
-                    const p = new Panel(x, y, this.panelLength, this.panelWidth, Orientation.HORIZONTAL, panelNumber++);
-                    if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
+            
+            if (maxYForColumn >= this.panelLength) {
+                const panel = new Panel(x, 0, this.panelWidth, this.panelLength, Orientation.VERTICAL, panelNumber++);
+                if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) && 
+                    !this.checkPanelCollision(panel, panels)) {
+                    panels.push(panel);
                 }
             }
+            x += this.panelWidth;
         }
-
-        return panels;
-    }
-
-    // Замена верхнего горизонтального ряда на вертикальные панели по всей длине
-    replaceTopRowWithVertical(panels) {
-        let optimized = [...panels];
-
-        // Удаляем горизонтальные панели верхнего ряда основной части (y < panelWidth)
-        optimized = optimized.filter(p => !(p.orientation === Orientation.HORIZONTAL && p.y < this.panelWidth));
-
-        // Добавляем вертикальные панели сверху по всей длине основной части
-        for (let x = 0; x + this.panelWidth <= this.room.mainLength + 1e-6; x += this.panelWidth) {
-            const p = new Panel(x, 0, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(optimized));
-            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, optimized)) optimized.push(p);
-        }
-
-        // Если есть выступ (Г‑образная комната) — делаем то же для его верхнего ряда
-        if (this.room.legLength > 0 && this.room.legWidth > 0) {
-            const yTop = this.room.mainWidth; // верх выступа
-
-            // Удаляем горизонтальные панели верхнего ряда выступа
-            optimized = optimized.filter(p => !(p.orientation === Orientation.HORIZONTAL && p.y >= yTop && p.y < yTop + this.panelWidth));
-
-            // Добавляем вертикальные панели по всей длине выступа
-            for (let x = 0; x + this.panelWidth <= this.room.legLength + 1e-6; x += this.panelWidth) {
-                const p = new Panel(x, yTop, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(optimized));
-                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, optimized)) optimized.push(p);
+        
+        // 2) Горизонтальные ряды ниже, продолжающиеся через основную часть и выступ
+        let y = this.panelLength;
+        while (y + this.panelWidth <= maxY + 1e-6) {
+            let x = 0;
+            
+            // Определяем максимальную длину для этой строки
+            let maxXForRow;
+            if (y < this.room.mainWidth) {
+                // Это строка основной части
+                maxXForRow = this.room.mainLength;
+            } else {
+                // Это строка выступа
+                maxXForRow = this.room.legLength;
             }
+            
+            // Размещаем горизонтальные панели в этой строке
+            while (x + this.panelLength <= maxXForRow + 1e-6) {
+                const panel = new Panel(x, y, this.panelLength, this.panelWidth, Orientation.HORIZONTAL, panelNumber++);
+                if (this.isPanelInsideRoom(panel.x, panel.y, panel.width, panel.height) && 
+                    !this.checkPanelCollision(panel, panels)) {
+                    panels.push(panel);
+                }
+                x += this.panelLength;
+            }
+            y += this.panelWidth;
         }
-
+        
+        // Оптимизация для максимального покрытия
+        let optimized = this.maximizeCoverage(panels);
         return optimized;
     }
 
@@ -267,10 +464,14 @@ class PanelCalculator {
 
         // Площадь покрытия по ЭФФЕКТИВНОМУ размеру панели
         const effectivePanelArea = EFFECTIVE_PANEL_LENGTH * EFFECTIVE_PANEL_WIDTH;
-        const coverageAreaEff = totalPanels * effectivePanelArea; // м²
+        const roomArea = this.room.getTotalArea();
+        let coverageAreaEff = totalPanels * effectivePanelArea; // м²
+        
+        // КРИТИЧЕСКОЕ: Покрытие не может превышать площадь комнаты (100%)
+        coverageAreaEff = Math.min(coverageAreaEff, roomArea);
 
         // Стоимость считаем по ПЛОЩАДИ ПОМЕЩЕНИЯ (как в Python)
-        const totalCost = this.room.getTotalArea() * pricePerM2;
+        const totalCost = roomArea * pricePerM2;
 
         // Первичные зазоры по основной части (для активной схемы раскладки)
         const mainRemainderLen = this.room.mainLength % this.panelLength;
@@ -295,129 +496,5 @@ class PanelCalculator {
             },
             withReserve: reserve5
         };
-    }
-
-    // Оптимизация: заменить правый столбец горизонтальных панелей на вертикальные
-    optimizeRightColumnWithVertical(initialPanels) {
-        // Работает только для прямоугольной комнаты (без выступа)
-        if (this.room.legLength > 0 && this.room.legWidth > 0) {
-            return initialPanels;
-        }
-
-        const panels = [...initialPanels];
-
-        // Остаток по длине и возможность поставить вертикальную колонну
-        const fullColsLen = Math.floor(this.room.mainLength / this.panelLength);
-        const xStrip = fullColsLen * this.panelLength;
-        const remainder = this.room.mainLength - xStrip;
-        if (remainder <= 1e-6 || remainder + 1e-9 < this.panelWidth) {
-            return panels;
-        }
-
-        // Базовая статистика
-        const baseStats = this.getStatistics(panels, 0);
-
-        // 1) Удаляем горизонтальные панели, которые могут пересечься с вертикальной колонной (те, что начинаются правее или на границе xStrip)
-        const kept = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && (p.x + 1e-9) >= xStrip));
-
-        // 2) Добавляем вертикальные панели у правой границы
-        const candidate = [...kept];
-        let y = 0;
-        while (y + this.panelLength <= this.room.mainWidth + 1e-9) {
-            const x = xStrip; // ставим вплотную к последнему горизонтальному ряду
-            const p = new Panel(x, y, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(candidate));
-            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, candidate)) {
-                candidate.push(p);
-            }
-            y += this.panelLength;
-        }
-
-        // Сравниваем по покрытию — берём лучший вариант
-        const newStats = this.getStatistics(candidate, 0);
-        return parseFloat(newStats.coverageArea) > parseFloat(baseStats.coverageArea) ? candidate : panels;
-    }
-
-    // Оптимизация правых кромок для L‑образной комнаты (и прямоугольной): добавление вертикальной полосы
-    optimizeRightEdgesForLShape(initialPanels) {
-        // Если прямоугольная — используем существующую оптимизацию
-        if (!(this.room.legLength > 0 && this.room.legWidth > 0)) {
-            return this.optimizeRightColumnWithVertical(initialPanels);
-        }
-
-        const panels = [...initialPanels];
-
-        // 1) Правая кромка основной части: x = xStripMain
-        const fullColsLenMain = Math.floor(this.room.mainLength / this.panelLength);
-        const xStripMain = fullColsLenMain * this.panelLength;
-        const remainderMain = this.room.mainLength - xStripMain;
-        if (remainderMain > 1e-6 && remainderMain + 1e-9 >= this.panelWidth) {
-            // Удаляем горизонтали, начинающиеся в полосе x >= xStripMain и лежащие в основной части по Y
-            const keptMain = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && (p.x + 1e-9) >= xStripMain && p.y + p.height <= this.room.mainWidth + 1e-9));
-            panels.length = 0;
-            panels.push(...keptMain);
-            // Добавляем вертикали вдоль правой кромки основной части
-            let y = 0;
-            while (y + this.panelLength <= this.room.mainWidth + 1e-9) {
-                const p = new Panel(xStripMain, y, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(panels));
-                if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
-                y += this.panelLength;
-            }
-        }
-
-        // 2) Правая кромка выступа: x = xStripLeg (считая от левого края, так же как комнаты)
-        if (this.room.legLength > 0 && this.room.legWidth > 0) {
-            const fullColsLenLeg = Math.floor(this.room.legLength / this.panelLength);
-            const xStripLeg = fullColsLenLeg * this.panelLength;
-            const remainderLeg = this.room.legLength - xStripLeg;
-            if (remainderLeg > 1e-6 && remainderLeg + 1e-9 >= this.panelWidth) {
-                const yTop = this.room.mainWidth;
-                // Удаляем горизонтали верхней части выступа, которые начинаются правее полосы
-                const keptLeg = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && (p.x + 1e-9) >= xStripLeg && p.y >= yTop - 1e-9));
-                panels.length = 0;
-                panels.push(...keptLeg);
-                let y = yTop;
-                while (y + this.panelLength <= yTop + this.room.legWidth + 1e-9) {
-                    const p = new Panel(xStripLeg, y, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(panels));
-                    if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, panels)) panels.push(p);
-                    y += this.panelLength;
-                }
-            }
-        }
-
-        return panels;
-    }
-
-    // Оптимизация выступа по высоте: убрать последний горизонтальный ряд и добавить вертикальную полосу внизу
-    optimizeLegBottomWithVerticalBand(initialPanels) {
-        if (!(this.room.legLength > 0 && this.room.legWidth > 0)) return initialPanels;
-
-        const panels = [...initialPanels];
-        const yTop = this.room.mainWidth;
-        const legH = this.room.legWidth;
-        const legL = this.room.legLength;
-
-        // Кол-во горизонтальных рядов, которые помещаются полностью
-        const fullHorizRows = Math.floor(legH / this.panelWidth);
-        if (fullHorizRows < 1) return panels;
-
-        // Координата начала нижней вертикальной полосы так, чтобы она касалась нижней границы выступа
-        const verticalY = yTop + Math.max(0, legH - this.panelLength);
-
-        // Удаляем последний горизонтальный ряд выступа, чтобы освободить место под вертикальную полосу
-        const lastHorizY = yTop + (fullHorizRows - 1) * this.panelWidth;
-        const kept = panels.filter(p => !(p.orientation === Orientation.HORIZONTAL && p.y + 1e-9 >= lastHorizY && p.y >= yTop - 1e-9));
-
-        const candidate = [...kept];
-
-        // Добавляем вертикальные панели внизу выступа по всей длине
-        for (let x = 0; x + this.panelWidth <= legL + 1e-6; x += this.panelWidth) {
-            const p = new Panel(x, verticalY, this.panelWidth, this.panelLength, Orientation.VERTICAL, this.findAvailablePanelNumber(candidate));
-            if (this.isPanelInsideRoom(p.x, p.y, p.width, p.height) && !this.checkPanelCollision(p, candidate)) candidate.push(p);
-        }
-
-        // Выбираем вариант с лучшим покрытием
-        const baseStats = this.getStatistics(panels, 0);
-        const newStats = this.getStatistics(candidate, 0);
-        return parseFloat(newStats.coverageArea) > parseFloat(baseStats.coverageArea) ? candidate : panels;
     }
 }

@@ -612,20 +612,21 @@ async function saveToPDF() {
             }
         };
         
-        // Загружаем логотип и QR-код как base64
-        const logoBase64 = await loadImageAsBase64('logo.png');
+        // Загружаем только QR-код как base64
         const qrBase64 = await loadImageAsBase64(qrImageUrl);
         
         pdfContainer.innerHTML = `
             <div style="position: relative; height: 297mm; display: flex; flex-direction: column; padding-bottom: 140px;">
                 <div>
-                    <div style="background: ${brandColor}; color: white; padding: 18px; text-align: left;">
+                    <div style="background: ${brandColor}; color: white; padding: 18px; text-align: left; position: relative;">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                            ${logoBase64 ? `<img src="${logoBase64}" alt="StP" style="height: 45px; width: auto; object-fit: contain;" />` : ''}
-                            <div style="font-size: 30px; font-weight: bold;">MultiFRAME</div>
+                            <div style="font-size: 30px; font-weight: bold;">StP MultiFRAME</div>
                         </div>
-                        <div style="font-size: 14px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
-                            Звукоизоляционная система для потолка
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
+                            <div>Звукоизоляционная система для потолка</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.7); font-weight: normal;">
+                                Prod. by STANDARTPLAST
+                            </div>
                         </div>
                     </div>
                     

@@ -586,37 +586,8 @@ async function saveToPDF() {
         const stats = window.currentBestScheme.stats;
         const coveragePercent = ((parseFloat(stats.coverageArea) / roomArea) * 100).toFixed(1);
         
-        // Собираем параметры помещения
-        let roomParams = 'Размеры: ' + window.currentParams.room.mainLength.toFixed(2) + ' × ' + window.currentParams.room.mainWidth.toFixed(2) + ' м';
-        if (window.currentParams.hasLeg) {
-            roomParams += ' (основное) + ' + window.currentParams.room.legLength.toFixed(2) + ' × ' + window.currentParams.room.legWidth.toFixed(2) + ' м (выступ)';
-        }
-        
-        // Генерируем QR-код через API (используем img src для встраивания)
-        const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://stp-multiframe.ru/';
-        
-        // Загружаем изображения через fetch для избежания проблем с CORS
-        const loadImageAsBase64 = async (url) => {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            } catch (e) {
-                console.warn('Не удалось загрузить изображение:', url, e);
-                return null;
-            }
-        };
-        
-        // Загружаем только QR-код как base64
-        const qrBase64 = await loadImageAsBase64(qrImageUrl);
-        
         pdfContainer.innerHTML = `
-            <div style="position: relative; height: 297mm; display: flex; flex-direction: column; padding-bottom: 140px;">
+            <div style="position: relative; height: 297mm; display: flex; flex-direction: column; padding-bottom: 20px;">
                 <div>
                     <div style="background: ${brandColor}; color: white; padding: 18px; text-align: left; position: relative;">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
@@ -667,26 +638,6 @@ async function saveToPDF() {
                             <div id="pdfCanvasWrapper" style="text-align: center; display: flex; justify-content: center; max-height: 350px;">
                                 <!-- Canvas будет скопирован сюда -->
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="margin-top: auto; position: absolute; bottom: 0; left: 0; right: 0; background: white;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-top: 1px solid ${brandColor};">
-                        <div style="flex: 1;">
-                            <div style="font-size: 13px; font-weight: bold; color: ${brandColor}; margin-bottom: 6px;">Контакты:</div>
-                            <div style="font-size: 13px; line-height: 1.6; color: #444;">
-                                <div>Сайт: stp-multiframe.ru</div>
-                                <div>Офис: г. Иваново, ул. Смирнова, д. 74</div>
-                                <div>Производитель: ООО "Стандартпласт"</div>
-                                <div>Email: stp-russia@stplus.ru</div>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-left: 20px;">
-                            <div style="font-size: 11px; color: #666; text-align: right;">
-                                Сканируйте<br>для перехода<br>на сайт
-                            </div>
-                            ${qrBase64 ? `<img src="${qrBase64}" style="width: 90px; height: 90px; display: block; margin: 0;" />` : ''}
                         </div>
                     </div>
                 </div>

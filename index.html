@@ -19,7 +19,19 @@
         <div class="main-content">
             <div class="input-panel">
                 <div class="card">
-                    <h2>Площадь потолка</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="margin: 0;">Площадь потолка</h2>
+                        <div class="theme-toggle">
+                            <label class="theme-switch" title="Переключить тему">
+                                <input type="checkbox" id="themeSwitch" aria-label="Переключатель темы">
+                                <span class="switch-track">
+                                    <span class="icon-sun" aria-hidden="true"></span>
+                                    <span class="icon-moon" aria-hidden="true"></span>
+                                    <span class="switch-thumb"></span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label for="mainLength" title="Минимальное значение: 0.1 м, максимальное: 100 м">
                             Длина помещения (м):
@@ -101,19 +113,7 @@
 
             <div class="visualization-panel">
                 <div class="card">
-                    <div class="scheme-header">
-                        <h2 id="selectedSchemeTitle">Схема монтажа</h2>
-                        <div class="theme-toggle">
-                            <label class="theme-switch" title="Переключить тему">
-                                <input type="checkbox" id="themeSwitch" aria-label="Переключатель темы">
-                                <span class="switch-track">
-                                    <span class="icon-sun" aria-hidden="true"></span>
-                                    <span class="icon-moon" aria-hidden="true"></span>
-                                    <span class="switch-thumb"></span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
+                    <h2 id="selectedSchemeTitle">Схема монтажа</h2>
 
                     <div class="canvas-container">
                         <div class="canvas-wrapper" id="bestScheme">

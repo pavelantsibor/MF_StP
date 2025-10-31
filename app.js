@@ -635,7 +635,7 @@ async function saveToPDF() {
                             <h2 style="color: ${brandColor}; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">
                                 Схема монтажа:
                             </h2>
-                            <div id="pdfCanvasWrapper" style="text-align: center; display: flex; justify-content: center; max-height: 350px;">
+                            <div id="pdfCanvasWrapper" style="text-align: center; display: flex; justify-content: center; max-height: 500px;">
                                 <!-- Canvas будет скопирован сюда -->
                             </div>
                         </div>
@@ -655,8 +655,8 @@ async function saveToPDF() {
             const newCanvas = document.createElement('canvas');
             newCanvas.width = originalCanvas.width * pixelScale;
             newCanvas.height = originalCanvas.height * pixelScale;
-            // Визуальный размер ограничиваем, чтобы не менять макет (высота ~350px)
-            newCanvas.style.maxHeight = '350px';
+            // Визуальный размер ограничиваем, чтобы не менять макет (высота ~500px)
+            newCanvas.style.maxHeight = '500px';
             newCanvas.style.width = 'auto';
 
             const ctx = newCanvas.getContext('2d');

@@ -495,8 +495,8 @@ class PanelCalculator {
         const dowelsWithReserve = Math.ceil(dowelsBase * 1.15);
 
         // Оценка времени работы
-        // 40 секунд на одну панель
-        const workTimeSeconds = totalPanels * 40;
+        // 60 секунд на одну панель
+        const workTimeSeconds = totalPanels * 60;
         const workTimeMinutes = Math.round(workTimeSeconds / 60);
         const workTimeHours = Math.floor(workTimeMinutes / 60);
         const workTimeRemainingMinutes = workTimeMinutes % 60;

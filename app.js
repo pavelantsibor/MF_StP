@@ -738,7 +738,7 @@ function quickCalculate() {
     const dowels = estimatedPanels * 2;
     
     // Расчёт времени (от базового количества панелей)
-    const workTimeMinutes = Math.round((estimatedPanels * 40) / 60);
+    const workTimeMinutes = Math.round((estimatedPanels * 60) / 60);
     const workTimeHours = Math.floor(workTimeMinutes / 60);
     const workTimeRemainingMinutes = workTimeMinutes % 60;
     const workTimeFormatted = workTimeHours > 0 
@@ -824,9 +824,13 @@ function generateShareLink() {
 🔗 Посмотреть схему монтажа:
 ${shareUrl}`;
     
-    // Проверяем поддержку Web Share API (для мобильных устройств)
-    if (navigator.share) {
-        // Используем нативное окно "Поделиться"
+    // Определяем, является ли устройство мобильным
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+    
+    // Используем Web Share API только на мобильных устройствах
+    if (isMobile && navigator.share) {
+        // Используем нативное окно "Поделиться" на мобильных
         // Передаём только text, так как ссылка уже включена в текст
         navigator.share({
             title: 'StP MultiFRAME - Расчёт монтажа',
@@ -842,7 +846,7 @@ ${shareUrl}`;
             }
         });
     } else {
-        // Для десктопа - просто копируем в буфер обмена
+        // Для десктопа - всегда копируем в буфер обмена
         copyToClipboard(message);
     }
 }

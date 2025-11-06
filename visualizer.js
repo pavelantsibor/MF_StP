@@ -47,10 +47,13 @@ class SchemeVisualizer {
         const width = Math.max(this.currentRoom.mainLength, this.currentRoom.legLength);
         const height = this.currentRoom.mainWidth + this.currentRoom.legWidth;
         
-        // Максимальные размеры canvas в пикселях (для веб-версии и PDF)
-        const maxCanvasWidth = 800;  // Максимальная ширина
-        const maxCanvasHeight = 800; // Максимальная высота
-        const padding = 100; // Отступы для размерных линий
+        // Проверяем, мобильное ли устройство
+        const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        
+        // Максимальные размеры canvas в пикселях
+        const maxCanvasWidth = isMobile ? 400 : 800;  // Меньше для мобильных
+        const maxCanvasHeight = isMobile ? 400 : 800; // Меньше для мобильных
+        const padding = isMobile ? 80 : 100; // Меньше отступы на мобильных
         
         // Вычисляем необходимый масштаб, чтобы помещение поместилось
         const scaleByWidth = (maxCanvasWidth - padding) / width;
@@ -60,7 +63,10 @@ class SchemeVisualizer {
         let optimalScale = Math.min(scaleByWidth, scaleByHeight);
         
         // Ограничиваем масштаб разумными пределами
-        optimalScale = Math.max(10, Math.min(50, optimalScale));
+        // На мобильных увеличиваем минимальный масштаб для лучшей видимости
+        const minScale = isMobile ? 15 : 10;
+        const maxScale = isMobile ? 60 : 50;
+        optimalScale = Math.max(minScale, Math.min(maxScale, optimalScale));
         
         return optimalScale;
     }
@@ -118,8 +124,9 @@ class SchemeVisualizer {
     initPanEvents() {
         if (!this.canvas) return;
         
-        // Мышь - начало перетаскивания
+        // Мышь - начало перетаскивания (только при zoom > 1)
         this.canvas.addEventListener('mousedown', (e) => {
+            if (this.zoom <= 1) return; // Отключаем drag при zoom = 1
             this.isDragging = true;
             this.dragStartX = e.clientX - this.panX * this.zoom;
             this.dragStartY = e.clientY - this.panY * this.zoom;
@@ -148,9 +155,9 @@ class SchemeVisualizer {
             }
         });
         
-        // Тач - начало
+        // Тач - начало (только при zoom > 1)
         this.canvas.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
+            if (e.touches.length === 1 && this.zoom > 1) { // Только при zoom > 1
                 this.isDragging = true;
                 const touch = e.touches[0];
                 this.dragStartX = touch.clientX - this.panX * this.zoom;
@@ -181,8 +188,18 @@ class SchemeVisualizer {
             }
         });
         
-        // Устанавливаем курсор
-        this.canvas.style.cursor = 'grab';
+        // Обновляем курсор в зависимости от zoom
+        this.updateCursor();
+    }
+    
+    // Обновление курсора в зависимости от zoom
+    updateCursor() {
+        if (!this.canvas) return;
+        if (this.zoom > 1) {
+            this.canvas.style.cursor = 'grab';
+        } else {
+            this.canvas.style.cursor = 'default';
+        }
     }
     
     // Сброс позиции перемещения
@@ -594,6 +611,7 @@ function zoomCanvas(schemeId, factor) {
     const visualizer = visualizers[schemeId] || visualizers.bestScheme;
     if (visualizer) {
         visualizer.zoom = state.zoom;
+        visualizer.updateCursor(); // Обновляем курсор при изменении zoom
         renderScheme(schemeId || 'bestScheme');
     }
 }

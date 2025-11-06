@@ -455,12 +455,28 @@ body.theme-dark .form-group input[type="text"]:focus {
     }
     
     .canvas-container::after {
-        content: '💡 Используйте +/- для масштабирования, перетаскивайте при зуме';
+        content: '💡 Увеличьте схему кнопкой +, затем можно перемещать';
         font-size: 11px;
         padding: 6px 12px;
         white-space: normal;
         line-height: 1.3;
         top: 10px;
+    }
+    
+    .canvas-controls {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    .icon-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+    
+    .canvas-checkbox {
+        font-size: 0.85rem;
+        padding: 6px 10px;
     }
 }
 

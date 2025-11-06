@@ -933,9 +933,33 @@ document.addEventListener('DOMContentLoaded', () => {
     calculateAllSchemes();
 });
 
+// Функция переключения блока быстрого расчёта
+function toggleQuickCalc() {
+    const card = document.getElementById('quickCalcCard');
+    const button = document.getElementById('toggleQuickCalc');
+    
+    if (card.style.display === 'none') {
+        card.style.display = 'block';
+        button.textContent = 'Скрыть расчёт по площади';
+        // Сохраняем иконку
+        const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+        button.innerHTML = icon + ' Скрыть расчёт по площади';
+    } else {
+        card.style.display = 'none';
+        button.textContent = 'Рассчитать по площади';
+        const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+        button.innerHTML = icon + ' Рассчитать по площади';
+    }
+}
+
 // Глобальные функции
 window.saveToPDF = saveToPDF;
 window.renderScheme = renderScheme;
 window.quickCalculate = quickCalculate;
 window.generateShareLink = generateShareLink;
+window.toggleQuickCalc = toggleQuickCalc;
 

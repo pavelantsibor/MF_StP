@@ -20,7 +20,7 @@
             <div class="input-panel">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h2 style="margin: 0;">Площадь потолка</h2>
+                        <h2 style="margin: 0;">Параметры потолка</h2>
                         <div class="theme-toggle">
                             <label class="theme-switch" title="Переключить тему">
                                 <input type="checkbox" id="themeSwitch" aria-label="Переключатель темы">
@@ -47,9 +47,9 @@
                         <span class="error-message" id="mainWidthError"></span>
                     </div>
                     <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="hasLeg" checked>
-                            Г-образное помещение (с выступом)
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="hasLeg" checked style="margin: 0;">
+                            <span>Г-образное помещение (с выступом)</span>
                         </label>
                     </div>
                     <div id="legFields" class="leg-fields" style="display: block;">
@@ -91,12 +91,19 @@
                     </div>
                 </div>
 
-                <div class="card" style="background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-subtle) 100%); border: 2px dashed var(--border-color);">
+                <button class="btn btn-secondary" id="toggleQuickCalc" onclick="toggleQuickCalc()" style="margin-bottom: 16px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                        <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Рассчитать по площади
+                </button>
+
+                <div class="card" id="quickCalcCard" style="background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-subtle) 100%); border: 2px dashed var(--border-color); display: none;">
                     <h2 style="display: flex; align-items: center; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
                             <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="var(--heading-color)" stroke="var(--heading-color)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        Быстрый расчёт
+                        Расчёт по площади
                     </h2>
                     <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 12px;">
                         Грубая оценка по площади

@@ -366,6 +366,18 @@ body.theme-dark .form-group input[type="text"]:focus {
     box-shadow: var(--shadow-lg);
 }
 
+.btn-secondary {
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-card);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+
 .btn:active {
     transform: scale(0.98);
 }

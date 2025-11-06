@@ -437,58 +437,31 @@ body.theme-dark .form-group input[type="text"]:focus {
     justify-content: center;
 }
 
-.canvas-container::after {
-    content: '💡 Используйте кнопки +/- для масштабирования, перетаскивайте схему при зуме';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(1, 100, 79, 0.9);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 12px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    white-space: nowrap;
-    z-index: 10;
-    max-width: 90%;
-    text-align: center;
-}
-
-.canvas-container:hover::after {
-    opacity: 1;
-}
+/* Подсказка удалена для улучшения UX на мобильных устройствах */
 
 @media (max-width: 768px) {
     .canvas-container {
         max-height: 500px;
     }
     
-    .canvas-container::after {
-        content: '💡 Увеличьте схему кнопкой +, затем можно перемещать';
-        font-size: 11px;
-        padding: 6px 12px;
-        white-space: normal;
-        line-height: 1.3;
-        top: 10px;
-    }
-    
     .canvas-controls {
-        padding: 8px;
-        gap: 8px;
+        padding: 6px;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
     }
     
     .icon-btn {
-        width: 44px;
-        height: 44px;
-        font-size: 1.2rem;
+        width: 42px;
+        height: 42px;
+        font-size: 1.1rem;
+        padding: 0;
     }
     
     .canvas-checkbox {
-        font-size: 0.85rem;
-        padding: 6px 10px;
+        font-size: 0.8rem;
+        padding: 6px 8px;
+        white-space: nowrap;
     }
 }
 

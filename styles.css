@@ -416,9 +416,52 @@ body.theme-dark .form-group input[type="text"]:focus {
     border-radius: 12px;
     padding: 16px;
     min-height: 500px;
-    overflow: auto;
+    max-height: 700px;
+    overflow: hidden;
     border: 1px solid var(--border-color);
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.canvas-container::after {
+    content: '💡 Используйте кнопки +/- для масштабирования, перетаскивайте схему при зуме';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(1, 100, 79, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+    z-index: 10;
+    max-width: 90%;
+    text-align: center;
+}
+
+.canvas-container:hover::after {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .canvas-container {
+        max-height: 500px;
+    }
+    
+    .canvas-container::after {
+        content: '💡 Используйте +/- для масштабирования, перетаскивайте при зуме';
+        font-size: 11px;
+        padding: 6px 12px;
+        white-space: normal;
+        line-height: 1.3;
+        top: 10px;
+    }
 }
 
 #resultsText strong {
@@ -432,6 +475,8 @@ body.theme-dark .form-group input[type="text"]:focus {
     align-items: center;
     gap: 15px;
     position: relative;
+    width: 100%;
+    max-width: 100%;
 }
 
 .canvas-wrapper.hidden {
@@ -444,6 +489,9 @@ canvas {
     background: #ffffff;
     box-shadow: var(--shadow);
     display: block;
+    max-width: 100%;
+    max-height: 600px;
+    flex-shrink: 0;
 }
 
 .canvas-controls {
@@ -452,6 +500,12 @@ canvas {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    background: var(--bg-card);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    z-index: 10;
+    margin-top: 10px;
 }
 
 .icon-btn {

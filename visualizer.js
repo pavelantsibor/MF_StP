@@ -9,6 +9,18 @@ class SchemeVisualizer {
         this.zoom = 1.0;
         this.currentPanels = [];
         this.currentRoom = null;
+        
+        // Параметры перемещения (pan)
+        this.panX = 0;
+        this.panY = 0;
+        this.isDragging = false;
+        this.dragStartX = 0;
+        this.dragStartY = 0;
+        this.lastPanX = 0;
+        this.lastPanY = 0;
+        
+        // Инициализация событий перемещения
+        this.initPanEvents();
     }
 
     setScale(scale) {
@@ -28,25 +40,64 @@ class SchemeVisualizer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
+    // Автоматический расчет оптимального масштаба для помещения
+    calculateOptimalScale() {
+        if (!this.currentRoom) return this.scale;
+        
+        const width = Math.max(this.currentRoom.mainLength, this.currentRoom.legLength);
+        const height = this.currentRoom.mainWidth + this.currentRoom.legWidth;
+        
+        // Максимальные размеры canvas в пикселях (для веб-версии и PDF)
+        const maxCanvasWidth = 800;  // Максимальная ширина
+        const maxCanvasHeight = 800; // Максимальная высота
+        const padding = 100; // Отступы для размерных линий
+        
+        // Вычисляем необходимый масштаб, чтобы помещение поместилось
+        const scaleByWidth = (maxCanvasWidth - padding) / width;
+        const scaleByHeight = (maxCanvasHeight - padding) / height;
+        
+        // Выбираем минимальный масштаб, чтобы всё поместилось
+        let optimalScale = Math.min(scaleByWidth, scaleByHeight);
+        
+        // Ограничиваем масштаб разумными пределами
+        optimalScale = Math.max(10, Math.min(50, optimalScale));
+        
+        return optimalScale;
+    }
+
     // Установка размера canvas
     resize() {
         if (!this.currentRoom) return;
         
+        // Используем адаптивный масштаб для больших помещений
+        const adaptiveScale = this.calculateOptimalScale();
+        
         const width = Math.max(this.currentRoom.mainLength, this.currentRoom.legLength);
         const height = this.currentRoom.mainWidth + this.currentRoom.legWidth;
-        const cssWidth = width * this.scale * this.zoom + 100;
-        const cssHeight = height * this.scale * this.zoom + 100;
+        
+        // Базовый размер БЕЗ zoom - canvas всегда одного размера в DOM
+        const baseWidth = width * adaptiveScale + 100;
+        const baseHeight = height * adaptiveScale + 100;
+        
+        // Canvas ФИКСИРОВАННОГО размера в CSS (в DOM не растет)
+        this.canvas.style.width = baseWidth + 'px';
+        this.canvas.style.height = baseHeight + 'px';
+        
+        // Применяем CSS transform для визуального увеличения (не влияет на layout!)
+        this.canvas.style.transform = `scale(${this.zoom})`;
+        this.canvas.style.transformOrigin = 'center center';
+        this.canvas.style.position = 'relative';
 
-        // Размер в CSS-пикселях
-        this.canvas.style.width = cssWidth + 'px';
-        this.canvas.style.height = cssHeight + 'px';
-
-        // Реальный буфер с учётом DPR для резкости
-        this.canvas.width = Math.floor(cssWidth * this.dpr);
-        this.canvas.height = Math.floor(cssHeight * this.dpr);
+        // Реальный буфер в ВЫСОКОМ разрешении для четкости
+        const bufferScale = 3; // Высокий буфер для качества при любом zoom
+        this.canvas.width = Math.floor(baseWidth * this.dpr * bufferScale);
+        this.canvas.height = Math.floor(baseHeight * this.dpr * bufferScale);
 
         // Сбрасываем трансформации и масштабируем контекст
-        this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        this.ctx.setTransform(this.dpr * bufferScale, 0, 0, this.dpr * bufferScale, 0, 0);
+        
+        // Сохраняем текущий адаптивный масштаб для использования в отрисовке
+        this.currentScale = adaptiveScale;
     }
 
     // Поворот canvas
@@ -60,7 +111,84 @@ class SchemeVisualizer {
     setZoom(zoomValue) {
         this.zoom = zoomValue;
         if (this.zoom < 0.5) this.zoom = 0.5;
-        if (this.zoom > 3) this.zoom = 3;
+        if (this.zoom > 5) this.zoom = 5; // Увеличиваем максимальный zoom до 5x
+    }
+    
+    // Инициализация событий перемещения (pan)
+    initPanEvents() {
+        if (!this.canvas) return;
+        
+        // Мышь - начало перетаскивания
+        this.canvas.addEventListener('mousedown', (e) => {
+            this.isDragging = true;
+            this.dragStartX = e.clientX - this.panX * this.zoom;
+            this.dragStartY = e.clientY - this.panY * this.zoom;
+            this.canvas.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+        
+        // Мышь - перетаскивание
+        window.addEventListener('mousemove', (e) => {
+            if (this.isDragging) {
+                // Учитываем zoom при перемещении
+                this.panX = (e.clientX - this.dragStartX) / this.zoom;
+                this.panY = (e.clientY - this.dragStartY) / this.zoom;
+                this.render(
+                    document.getElementById('showGrid')?.checked ?? true,
+                    document.getElementById('showNumbers')?.checked ?? true
+                );
+            }
+        });
+        
+        // Мышь - конец перетаскивания
+        window.addEventListener('mouseup', () => {
+            if (this.isDragging) {
+                this.isDragging = false;
+                this.canvas.style.cursor = 'grab';
+            }
+        });
+        
+        // Тач - начало
+        this.canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                this.isDragging = true;
+                const touch = e.touches[0];
+                this.dragStartX = touch.clientX - this.panX * this.zoom;
+                this.dragStartY = touch.clientY - this.panY * this.zoom;
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Тач - перемещение
+        window.addEventListener('touchmove', (e) => {
+            if (this.isDragging && e.touches.length === 1) {
+                const touch = e.touches[0];
+                // Учитываем zoom при перемещении
+                this.panX = (touch.clientX - this.dragStartX) / this.zoom;
+                this.panY = (touch.clientY - this.dragStartY) / this.zoom;
+                this.render(
+                    document.getElementById('showGrid')?.checked ?? true,
+                    document.getElementById('showNumbers')?.checked ?? true
+                );
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Тач - конец
+        window.addEventListener('touchend', () => {
+            if (this.isDragging) {
+                this.isDragging = false;
+            }
+        });
+        
+        // Устанавливаем курсор
+        this.canvas.style.cursor = 'grab';
+    }
+    
+    // Сброс позиции перемещения
+    resetPan() {
+        this.panX = 0;
+        this.panY = 0;
     }
 
     // Рисование сетки
@@ -73,22 +201,26 @@ class SchemeVisualizer {
         const width = Math.max(this.currentRoom.mainLength, this.currentRoom.legLength);
         const height = this.currentRoom.mainWidth + this.currentRoom.legWidth;
         
-        const scaledWidth = width * this.scale * this.zoom;
-        const scaledHeight = height * this.scale * this.zoom;
+        const scale = (this.currentScale || this.scale);
+        const scaledWidth = width * scale;
+        const scaledHeight = height * scale;
+        
+        const offsetX = 50 + this.panX;
+        const offsetY = 50 + this.panY;
         
         // Вертикальные линии
-        for (let x = 0; x <= scaledWidth; x += this.scale * this.zoom) {
+        for (let x = 0; x <= scaledWidth; x += scale) {
             this.ctx.beginPath();
-            this.ctx.moveTo(x + 50, 50);
-            this.ctx.lineTo(x + 50, scaledHeight + 50);
+            this.ctx.moveTo(x + offsetX, offsetY);
+            this.ctx.lineTo(x + offsetX, scaledHeight + offsetY);
             this.ctx.stroke();
         }
         
         // Горизонтальные линии
-        for (let y = 0; y <= scaledHeight; y += this.scale * this.zoom) {
+        for (let y = 0; y <= scaledHeight; y += scale) {
             this.ctx.beginPath();
-            this.ctx.moveTo(50, y + 50);
-            this.ctx.lineTo(scaledWidth + 50, y + 50);
+            this.ctx.moveTo(offsetX, y + offsetY);
+            this.ctx.lineTo(scaledWidth + offsetX, y + offsetY);
             this.ctx.stroke();
         }
     }
@@ -98,10 +230,10 @@ class SchemeVisualizer {
         if (!this.currentRoom) return;
 
         this.ctx.save();
-        this.ctx.translate(50, 50);
+        this.ctx.translate(50 + this.panX, 50 + this.panY);
 
         // Рисуем единый L‑образный контур без внутренней границы между основной частью и выступом
-        const scale = this.scale * this.zoom;
+        const scale = (this.currentScale || this.scale);
         const mainL = this.currentRoom.mainLength * scale;
         const mainW = this.currentRoom.mainWidth * scale;
         const legL = this.currentRoom.legLength * scale;
@@ -137,15 +269,12 @@ class SchemeVisualizer {
         this.ctx.stroke();
 
         this.ctx.restore();
-
-        // Размерные линии и подписи
-        this.drawDimensions();
     }
 
     // Рисование панелей
     drawPanels(showNumbers) {
         this.ctx.save();
-        this.ctx.translate(50, 50);
+        this.ctx.translate(50 + this.panX, 50 + this.panY);
 
         const colors = {
             [Orientation.HORIZONTAL]: {
@@ -158,13 +287,15 @@ class SchemeVisualizer {
             }
         };
 
+        const scale = (this.currentScale || this.scale);
+        
         this.currentPanels.forEach(panel => {
             const color = colors[panel.orientation] || colors[Orientation.HORIZONTAL];
             
-            const x = panel.x * this.scale * this.zoom;
-            const y = panel.y * this.scale * this.zoom;
-            const width = panel.width * this.scale * this.zoom;
-            const height = panel.height * this.scale * this.zoom;
+            const x = panel.x * scale;
+            const y = panel.y * scale;
+            const width = panel.width * scale;
+            const height = panel.height * scale;
 
             // Рисование панели
             this.ctx.fillStyle = color.fill;
@@ -176,12 +307,21 @@ class SchemeVisualizer {
 
             // Номер панели
             if (showNumbers) {
+                // Адаптивный размер шрифта в зависимости от размера панели
+                const panelSize = Math.min(width, height);
+                // Размер шрифта пропорционален размеру панели, минимум 7px
+                let fontSize = Math.max(7, Math.min(panelSize * 0.45, 18));
+                
                 this.ctx.fillStyle = '#ffffff';
-                this.ctx.font = `bold ${Math.max(14, 16 * this.zoom)}px Arial`;
+                this.ctx.font = `bold ${fontSize}px Arial`;
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
+                
+                const text = panel.number.toString();
+                
+                // Всегда рисуем номер, даже если он маленький
                 this.ctx.fillText(
-                    panel.number.toString(),
+                    text,
                     x + width / 2,
                     y + height / 2
                 );
@@ -197,7 +337,7 @@ class SchemeVisualizer {
         if (!room) return;
 
         const ctx = this.ctx;
-        const scale = this.scale * this.zoom;
+        const scale = (this.currentScale || this.scale) * this.zoom;
 
         const mainW = room.mainWidth * scale;
         const mainL = room.mainLength * scale;
@@ -310,10 +450,107 @@ class SchemeVisualizer {
         this.drawGrid(showGrid);
         this.drawRoom();
         this.drawPanels(showNumbers);
+        // Размерные линии рисуем последними, чтобы они были поверх всего
+        this.drawDimensionsOverlay();
 
         if (this.rotation !== 0) {
             this.ctx.restore();
         }
+    }
+    
+    // Отрисовка размерных линий поверх всего
+    drawDimensionsOverlay() {
+        const room = this.currentRoom;
+        if (!room) return;
+
+        const ctx = this.ctx;
+        const scale = (this.currentScale || this.scale);
+
+        const mainW = room.mainWidth * scale;
+        const mainL = room.mainLength * scale;
+        const legL = room.legLength * scale;
+        const legW = room.legWidth * scale;
+
+        // Смещения с учетом перемещения
+        const baseX = 50 + this.panX;
+        const baseY = 50 + this.panY;
+        const offset = 18;
+        const arrowSize = 8;
+
+        ctx.save();
+        ctx.strokeStyle = '#01644f';
+        ctx.fillStyle = '#01644f';
+        ctx.lineWidth = 2;
+        ctx.font = `bold 14px Arial`;
+
+        // Функция для рисования линии размера
+        const drawDimLine = (x1, y1, x2, y2) => {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 + arrowSize * Math.cos(angle + Math.PI / 6), y1 + arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 + arrowSize * Math.cos(angle - Math.PI / 6), y1 + arrowSize * Math.sin(angle - Math.PI / 6));
+            const back = angle + Math.PI;
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 + arrowSize * Math.cos(back + Math.PI / 6), y2 + arrowSize * Math.sin(back + Math.PI / 6));
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 + arrowSize * Math.cos(back - Math.PI / 6), y2 + arrowSize * Math.sin(back - Math.PI / 6));
+            ctx.stroke();
+        };
+
+        // Общая ширина (по Y) слева
+        const totalH = mainW + legW;
+        const leftOffset = 10;
+        const leftX = baseX - leftOffset;
+        const topY = baseY;
+        const bottomY = baseY + totalH;
+        drawDimLine(leftX, topY, leftX, bottomY);
+
+        const totalHeightMeters = (room.mainWidth + room.legWidth).toFixed(2);
+        const leftLabel = `${totalHeightMeters} м`;
+        ctx.save();
+        ctx.translate(leftX - 8, baseY + totalH / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText(leftLabel, 0, 0);
+        ctx.restore();
+
+        // Общая длина (по X) сверху
+        const topX1 = baseX;
+        const topX2 = baseX + mainL;
+        const topYDim = baseY - 14;
+        drawDimLine(topX1, topYDim, topX2, topYDim);
+
+        const totalLengthMeters = room.mainLength.toFixed(2);
+        const topLabel = `${totalLengthMeters} м`;
+        ctx.textAlign = 'center';
+        ctx.fillText(topLabel, (topX1 + topX2) / 2, topYDim - 6);
+
+        // Размеры выступа
+        if (room.legLength > 0 && room.legWidth > 0) {
+            const legBottomY = baseY + mainW + legW + offset;
+            drawDimLine(baseX, legBottomY, baseX + legL, legBottomY);
+            ctx.textAlign = 'center';
+            ctx.fillText(`${room.legLength.toFixed(1)} м`, baseX + legL / 2, legBottomY + 14);
+
+            const rightDimX = baseX + legL + offset;
+            const rightY1 = baseY + mainW;
+            const rightY2 = baseY + mainW + legW;
+            drawDimLine(rightDimX, rightY1, rightDimX, rightY2);
+            ctx.save();
+            ctx.translate(rightDimX + 16, (rightY1 + rightY2) / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText(`${room.legWidth.toFixed(1)} м`, 0, 0);
+            ctx.restore();
+        }
+
+        ctx.restore();
     }
 
     // Экспорт в изображение
@@ -352,11 +589,25 @@ function zoomCanvas(schemeId, factor) {
     
     state.zoom *= factor;
     if (state.zoom < 0.5) state.zoom = 0.5;
-    if (state.zoom > 3) state.zoom = 3;
+    if (state.zoom > 5) state.zoom = 5;
     
     const visualizer = visualizers[schemeId] || visualizers.bestScheme;
     if (visualizer) {
         visualizer.zoom = state.zoom;
+        renderScheme(schemeId || 'bestScheme');
+    }
+}
+
+function resetCanvasView(schemeId) {
+    const state = canvasStates[schemeId] || canvasStates.bestScheme;
+    if (!state) return;
+    
+    state.zoom = 1.0;
+    
+    const visualizer = visualizers[schemeId] || visualizers.bestScheme;
+    if (visualizer) {
+        visualizer.zoom = 1.0;
+        visualizer.resetPan();
         renderScheme(schemeId || 'bestScheme');
     }
 }

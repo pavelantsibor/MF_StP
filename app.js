@@ -178,35 +178,8 @@ let currentRoom = null;
 
 // Инициализация визуализаторов
 function initializeVisualizers() {
-    const scale = calculateAdaptiveScale();
-    visualizers.bestScheme = new SchemeVisualizer('canvas1', scale);
-}
-
-// Расчет адаптивного масштаба
-function calculateAdaptiveScale() {
-    const canvasContainer = document.querySelector('.canvas-container');
-    if (!canvasContainer) return 50;
-
-    const containerWidth = canvasContainer.clientWidth - 24; // Учитываем padding
-
-    // Оцениваем максимальный размер комнаты, если доступен currentRoom
-    let maxRoomDimension = 10;
-    if (window.currentParams && window.currentParams.room) {
-        const r = window.currentParams.room;
-        maxRoomDimension = Math.max(r.mainLength, r.legLength, r.mainWidth + r.legWidth);
-        maxRoomDimension = Math.max(3, Math.min(maxRoomDimension, 20));
-    }
-
-    // Базовый масштаб в зависимости от ширины контейнера
-    let scale = Math.floor(containerWidth / maxRoomDimension);
-
-    // Ограничения с учётом мобильных
-    const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-    const minScale = isMobile ? 36 : 30;
-    const maxScale = isMobile ? 110 : 100;
-    scale = Math.max(minScale, Math.min(scale, maxScale));
-
-    return scale;
+    // Визуализатор сам рассчитает оптимальный масштаб
+    visualizers.bestScheme = new SchemeVisualizer('canvas1', 50);
 }
 
 // Получение параметров из формы с валидацией
@@ -292,12 +265,15 @@ function calculateAllSchemes() {
         
         // Обновляем визуализатор
         if (!visualizers.bestScheme) {
-            const scale = calculateAdaptiveScale();
-            visualizers.bestScheme = new SchemeVisualizer('canvas1', scale);
+            visualizers.bestScheme = new SchemeVisualizer('canvas1', 50);
         }
         
-        const adaptiveScale = calculateAdaptiveScale();
-        visualizers.bestScheme.setScale(adaptiveScale);
+        // Сбрасываем позицию и zoom при новом расчёте
+        visualizers.bestScheme.resetPan();
+        visualizers.bestScheme.zoom = 1.0;
+        canvasStates.bestScheme.zoom = 1.0;
+        
+        // Устанавливаем данные - масштаб рассчитается автоматически
         visualizers.bestScheme.setRoom(params.room);
         visualizers.bestScheme.setPanels(bestScheme.panels);
         
@@ -646,24 +622,29 @@ async function saveToPDF() {
         
         document.body.appendChild(pdfContainer);
         
-        // Копируем canvas в PDF с повышенной плотностью пикселей (для резкости)
+        // Создаём специальный canvas для PDF с оптимальным масштабом
         const canvasWrapper = pdfContainer.querySelector('#pdfCanvasWrapper');
-        const originalCanvas = document.getElementById('canvas1');
-        if (originalCanvas && canvasWrapper) {
-            // Поднимаем реальное разрешение в 2 раза, визуальный размер оставляем прежним
-            const pixelScale = 2; // коэффициент повышения DPI
-            const newCanvas = document.createElement('canvas');
-            newCanvas.width = originalCanvas.width * pixelScale;
-            newCanvas.height = originalCanvas.height * pixelScale;
-            // Визуальный размер ограничиваем, чтобы не менять макет (высота ~500px)
-            newCanvas.style.maxHeight = '500px';
-            newCanvas.style.width = 'auto';
-
-            const ctx = newCanvas.getContext('2d');
-            ctx.scale(pixelScale, pixelScale);
-            ctx.drawImage(originalCanvas, 0, 0);
-
-            canvasWrapper.appendChild(newCanvas);
+        if (canvasWrapper) {
+            // Создаем временный canvas с фиксированным размером для PDF
+            const pdfCanvas = document.createElement('canvas');
+            pdfCanvas.id = 'pdfCanvas';
+            pdfCanvas.style.maxHeight = '500px';
+            pdfCanvas.style.width = 'auto';
+            pdfCanvas.style.border = '1px solid #e1e5e8';
+            pdfCanvas.style.borderRadius = '10px';
+            pdfCanvas.style.background = '#ffffff';
+            
+            canvasWrapper.appendChild(pdfCanvas);
+            
+            // Создаём временный визуализатор с адаптивным масштабом для PDF
+            const pdfVisualizer = new SchemeVisualizer('pdfCanvas', 50);
+            pdfVisualizer.setRoom(window.currentParams.room);
+            pdfVisualizer.setPanels(window.currentBestScheme.panels);
+            
+            // Отрисовываем схему на временном canvas
+            const showGrid = document.getElementById('showGrid').checked;
+            const showNumbers = document.getElementById('showNumbers').checked;
+            pdfVisualizer.render(showGrid, showNumbers);
         }
         
         // Ждем загрузки изображений

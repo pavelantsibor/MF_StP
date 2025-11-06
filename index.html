@@ -91,6 +91,25 @@
                     </div>
                 </div>
 
+                <div class="card" style="background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-subtle) 100%); border: 2px dashed var(--border-color);">
+                    <h2 style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.3em; color: #01644f;">⚡</span>
+                        Быстрый расчёт
+                    </h2>
+                    <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 12px;">
+                        Грубая оценка по площади
+                    </p>
+                    <div class="form-group">
+                        <label for="quickArea">
+                            Площадь помещения (м²):
+                        </label>
+                        <input type="number" id="quickArea" placeholder="25" step="0.1" min="0.1" max="5000" oninput="quickCalculate()">
+                    </div>
+                    <div id="quickResult" style="margin-top: 12px; padding: 12px; background: var(--bg-card); border-radius: 8px; min-height: 60px;">
+                        <span style="color: var(--text-secondary);">Введите площадь помещения</span>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="autoCalc">
@@ -159,7 +178,15 @@
                     </div>
 
                     <div class="card" style="margin-top:16px;">
-                        <h2>Результаты расчета</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h2 style="margin: 0;">Результаты расчета</h2>
+                            <button class="btn-share-compact" onclick="generateShareLink()" title="Скопировать ссылку на расчёт">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37061L8.08259 9.19346C7.54305 8.47607 6.72488 8 5.8 8C4.14315 8 2.8 9.34315 2.8 11C2.8 12.6569 4.14315 14 5.8 14C6.72488 14 7.54305 13.5239 8.08259 12.8065L15.0227 16.6294C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C17.0751 14 16.2569 14.4761 15.7174 15.1935L8.77732 11.3706C8.79229 11.2492 8.8 11.1255 8.8 11C8.8 10.8745 8.79229 10.7508 8.77732 10.6294L15.7174 6.80654C16.2569 7.52393 17.0751 8 18 8Z" fill="currentColor"/>
+                                </svg>
+                                Поделиться
+                            </button>
+                        </div>
                         <div id="resultsText" style="white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; color: var(--text-primary);"></div>
                     </div>
                 </div>

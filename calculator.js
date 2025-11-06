@@ -489,6 +489,18 @@ class PanelCalculator {
         // 5% запас
         const reserve5 = Math.ceil(totalPanels * 1.05);
 
+        // Расчёт крепежа (дюбель-гвозди тарельчатые)
+        // 2 дюбеля на панель + 15% запас
+        const dowelsBase = totalPanels * 2;
+        const dowelsWithReserve = Math.ceil(dowelsBase * 1.15);
+
+        // Оценка времени работы
+        // 40 секунд на одну панель
+        const workTimeSeconds = totalPanels * 40;
+        const workTimeMinutes = Math.round(workTimeSeconds / 60);
+        const workTimeHours = Math.floor(workTimeMinutes / 60);
+        const workTimeRemainingMinutes = workTimeMinutes % 60;
+
         return {
             total: totalPanels,
             horizontal,
@@ -499,7 +511,20 @@ class PanelCalculator {
                 lengthMm: gapLenMm,
                 widthMm: gapWidMm
             },
-            withReserve: reserve5
+            withReserve: reserve5,
+            dowels: {
+                base: dowelsBase,
+                withReserve: dowelsWithReserve
+            },
+            workTime: {
+                seconds: workTimeSeconds,
+                minutes: workTimeMinutes,
+                hours: workTimeHours,
+                remainingMinutes: workTimeRemainingMinutes,
+                formatted: workTimeHours > 0 
+                    ? `${workTimeHours} ч ${workTimeRemainingMinutes} мин`
+                    : `${workTimeMinutes} мин`
+            }
         };
     }
 }

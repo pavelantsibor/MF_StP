@@ -288,6 +288,9 @@ function calculateAllSchemes() {
         updateStatistics(bestScheme.panels, params.pricePerM2);
         updateResultsText(params, bestScheme.panels, bestScheme.name);
         
+        // Обновляем URL в адресной строке
+        updateURL();
+        
     } catch (error) {
         console.error('Ошибка при расчете:', error);
         showUserMessage(error.message || 'Произошла ошибка при расчете. Проверьте введённые данные.', 'error');
@@ -370,6 +373,8 @@ function updateResultsText(params, panels, schemeName) {
     lines.push('');
     lines.push(`Всего панелей: ${stats.total}  | с 5% запасом: ${stats.withReserve}`);
     lines.push(`Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)`);
+    lines.push(`Дюбель-гвозди: ${stats.dowels.withReserve} шт. (с запасом 15%)`);
+    lines.push(`Ориентировочное время монтажа: ${stats.workTime.formatted}`);
     lines.push(`Общая стоимость материалов: ${stats.totalCost.toLocaleString('ru-RU')} ₽`);
 
     // Используем innerHTML для форматирования жирным текстом "Общая стоимость материалов:"
@@ -572,7 +577,7 @@ async function saveToPDF() {
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
                             <div>Звукоизоляционная система для потолка</div>
                             <div style="font-size: 14px; color: rgba(255,255,255,0.7); font-weight: normal;">
-                                Prod. by STANDARTPLAST
+                                от компании Стандартпласт
                             </div>
                         </div>
                     </div>
@@ -601,6 +606,8 @@ async function saveToPDF() {
                             <div style="font-size: 12px; line-height: 1.6; color: #444; padding-left: 10px;">
                                 <div>Всего панелей: ${stats.total} шт. (с запасом 5%: ${stats.withReserve} шт.)</div>
                                 <div>Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)</div>
+                                <div>Дюбель-гвозди: ${stats.dowels.withReserve} шт. (с запасом 15%)</div>
+                                <div>Ориентировочное время монтажа: ${stats.workTime.formatted}</div>
                                 <div style="font-weight: bold; color: ${brandColor}; font-size: 14px; margin-top: 6px;">
                                     Общая стоимость материалов: ${stats.totalCost.toLocaleString('ru-RU')} ₽
                                 </div>
@@ -682,8 +689,23 @@ async function saveToPDF() {
         // Удаляем временный контейнер
         document.body.removeChild(pdfContainer);
         
-        // Сохраняем файл
-        const fileName = 'MultiFrame_Расчет.pdf';
+        // Формируем имя файла с размерами и датой
+        const room = window.currentParams.room;
+        const hasLeg = window.currentParams.hasLeg;
+        
+        // Размеры (округляем до целых для краткости)
+        const mainSize = `${Math.round(room.mainLength)}х${Math.round(room.mainWidth)}м`;
+        const legSize = hasLeg ? `(${Math.round(room.legLength)}х${Math.round(room.legWidth)}м)` : '';
+        
+        // Текущая дата в формате дд.мм.гг
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        const dateStr = `${day}.${month}.${year}`;
+        
+        // Собираем имя файла
+        const fileName = `MultiFrame_${mainSize}${legSize}_${dateStr}.pdf`;
         doc.save(fileName);
         
     } catch (error) {
@@ -692,11 +714,190 @@ async function saveToPDF() {
     }
 }
 
+// Функция быстрого расчёта по площади
+function quickCalculate() {
+    const areaInput = document.getElementById('quickArea');
+    const resultEl = document.getElementById('quickResult');
+    
+    if (!areaInput || !resultEl) return;
+    
+    const area = parseLocaleNumber(areaInput.value);
+    
+    if (isNaN(area) || area <= 0) {
+        resultEl.innerHTML = '<span style="color: var(--text-secondary);">Введите площадь помещения</span>';
+        return;
+    }
+    
+    // Площадь одной эффективной панели
+    const panelArea = EFFECTIVE_PANEL_LENGTH * EFFECTIVE_PANEL_WIDTH;
+    
+    // Грубая оценка количества панелей (без запаса)
+    const estimatedPanels = Math.ceil(area / panelArea);
+    
+    // Расчёт крепежа (от базового количества панелей)
+    const dowels = estimatedPanels * 2;
+    
+    // Расчёт времени (от базового количества панелей)
+    const workTimeMinutes = Math.round((estimatedPanels * 40) / 60);
+    const workTimeHours = Math.floor(workTimeMinutes / 60);
+    const workTimeRemainingMinutes = workTimeMinutes % 60;
+    const workTimeFormatted = workTimeHours > 0 
+        ? `${workTimeHours} ч ${workTimeRemainingMinutes} мин`
+        : `${workTimeMinutes} мин`;
+    
+    resultEl.innerHTML = `
+        <div style="color: var(--text-primary); line-height: 1.8;">
+            <div><strong>Примерно ${estimatedPanels} панелей</strong></div>
+            <div style="color: var(--text-secondary); font-size: 0.9em;">Дюбелей: ~${dowels} шт.</div>
+            <div style="color: var(--text-secondary); font-size: 0.9em;">Время монтажа: ~${workTimeFormatted}</div>
+            <div style="margin-top: 8px; font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
+                Это приблизительная оценка. Для точного расчёта используйте основной калькулятор.
+            </div>
+        </div>
+    `;
+}
+
+// Функция обновления URL без перезагрузки страницы
+function updateURL() {
+    const mainLength = document.getElementById('mainLength').value;
+    const mainWidth = document.getElementById('mainWidth').value;
+    const hasLeg = document.getElementById('hasLeg').checked;
+    const legLength = document.getElementById('legLength').value;
+    const legWidth = document.getElementById('legWidth').value;
+    const pricePerM2 = document.getElementById('pricePerM2').value;
+    
+    const params = new URLSearchParams();
+    params.append('l', mainLength);
+    params.append('w', mainWidth);
+    if (hasLeg) {
+        params.append('ll', legLength);
+        params.append('lw', legWidth);
+    }
+    params.append('p', pricePerM2);
+    
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+}
+
+// Функция генерации ссылки для sharing
+function generateShareLink() {
+    if (!calculator || !currentRoom) {
+        showUserMessage('Сначала выполните расчёт', 'error');
+        return;
+    }
+    
+    // Текущий URL с параметрами
+    const shareUrl = window.location.href;
+    
+    // Получаем данные для сообщения
+    const params = window.currentParams;
+    const bestScheme = window.currentBestScheme;
+    const stats = calculator.getStatistics(bestScheme.panels, params.pricePerM2);
+    const roomArea = params.room.getTotalArea();
+    const coveragePercent = ((parseFloat(stats.coverageArea) / roomArea) * 100).toFixed(1);
+    
+    // Формируем размеры помещения
+    let roomDimensions = `${params.room.mainLength.toFixed(2)}×${params.room.mainWidth.toFixed(2)} м`;
+    if (params.hasLeg) {
+        roomDimensions += ` + ${params.room.legLength.toFixed(2)}×${params.room.legWidth.toFixed(2)} м (выступ)`;
+    }
+    
+    // Формируем красивое сообщение
+    const message = `🔊 StP MultiFRAME
+Звукоизоляционная система для потолка
+от компании Стандартпласт
+
+📐 РАСЧЁТ СХЕМЫ МОНТАЖА
+
+Параметры помещения:
+• Размеры: ${roomDimensions}
+• Площадь: ${roomArea.toFixed(2)} м²
+• Размер панели: 0,75×0,55 м
+
+Результаты расчёта:
+• Всего панелей: ${stats.total} шт. (с запасом 5%: ${stats.withReserve} шт.)
+• Площадь покрытия: ${stats.coverageArea} м² (${coveragePercent}%)
+• Дюбель-гвозди: ${stats.dowels.withReserve} шт. (с запасом 15%)
+• Время монтажа: ${stats.workTime.formatted}
+• Общая стоимость материалов: ${stats.totalCost.toLocaleString('ru-RU')} ₽
+
+🔗 Посмотреть схему монтажа:
+${shareUrl}`;
+    
+    // Проверяем поддержку Web Share API (для мобильных устройств)
+    if (navigator.share) {
+        // Используем нативное окно "Поделиться"
+        navigator.share({
+            title: 'StP MultiFRAME - Расчёт монтажа',
+            text: message,
+            url: shareUrl
+        }).then(() => {
+            showUserMessage('Спасибо за использование функции "Поделиться"!', 'info');
+        }).catch(err => {
+            // Пользователь отменил или произошла ошибка
+            if (err.name !== 'AbortError') {
+                console.error('Ошибка при попытке поделиться:', err);
+                // Fallback на копирование в буфер
+                copyToClipboard(message);
+            }
+        });
+    } else {
+        // Для десктопа - просто копируем в буфер обмена
+        copyToClipboard(message);
+    }
+}
+
+// Вспомогательная функция для копирования в буфер обмена
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showUserMessage('Расчёт скопирован в буфер обмена!', 'info');
+    }).catch(err => {
+        // Fallback для старых браузеров
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showUserMessage('Расчёт скопирован в буфер обмена!', 'info');
+        } catch (err) {
+            prompt('Скопируйте сообщение:', text);
+        }
+        document.body.removeChild(textArea);
+    });
+}
+
+// Функция загрузки параметров из URL
+function loadFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.has('l')) {
+        document.getElementById('mainLength').value = parseFloat(urlParams.get('l')).toFixed(2);
+    }
+    if (urlParams.has('w')) {
+        document.getElementById('mainWidth').value = parseFloat(urlParams.get('w')).toFixed(2);
+    }
+    if (urlParams.has('ll') && urlParams.has('lw')) {
+        document.getElementById('hasLeg').checked = true;
+        document.getElementById('legFields').style.display = 'block';
+        document.getElementById('legLength').value = parseFloat(urlParams.get('ll')).toFixed(2);
+        document.getElementById('legWidth').value = parseFloat(urlParams.get('lw')).toFixed(2);
+    }
+    if (urlParams.has('p')) {
+        document.getElementById('pricePerM2').value = urlParams.get('p');
+    }
+}
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     initializeVisualizers();
     setupLegToggle();
     setupEventListeners();
+    
+    // Загружаем параметры из URL (если есть)
+    loadFromURL();
     
     // Форматирование начальных значений полей с размерностями (с двумя знаками после запятой)
     const sizeFields = ['mainLength', 'mainWidth', 'legLength', 'legWidth'];
@@ -732,9 +933,9 @@ document.addEventListener('DOMContentLoaded', () => {
     calculateAllSchemes();
 });
 
-// Глобальная функция для PDF
+// Глобальные функции
 window.saveToPDF = saveToPDF;
-
-// Глобальная функция renderScheme для visualizer.js
 window.renderScheme = renderScheme;
+window.quickCalculate = quickCalculate;
+window.generateShareLink = generateShareLink;
 

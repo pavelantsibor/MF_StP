@@ -293,7 +293,13 @@ function calculateAllSchemes() {
         
     } catch (error) {
         console.error('Ошибка при расчете:', error);
-        showUserMessage(error.message || 'Произошла ошибка при расчете. Проверьте введённые данные.', 'error');
+        const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка при расчете. Проверьте введённые данные.';
+        showUserMessage(errorMessage, 'error');
+        
+        // Сбрасываем состояние при ошибке
+        if (typeof updateStatistics === 'function') {
+            updateStatistics(0, 0);
+        }
     }
 }
 
@@ -710,7 +716,8 @@ async function saveToPDF() {
         
     } catch (error) {
         console.error('Ошибка при сохранении PDF:', error);
-        alert('Ошибка при сохранении PDF: ' + error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Не удалось сохранить PDF файл.';
+        showUserMessage(errorMessage, 'error');
     }
 }
 
@@ -718,6 +725,7 @@ async function saveToPDF() {
 function quickCalculate() {
     const areaInput = document.getElementById('quickArea');
     const resultEl = document.getElementById('quickResult');
+    const priceInput = document.getElementById('pricePerM2');
     
     if (!areaInput || !resultEl) return;
     
@@ -745,11 +753,24 @@ function quickCalculate() {
         ? `${workTimeHours} ч ${workTimeRemainingMinutes} мин`
         : `${workTimeMinutes} мин`;
     
+    // Расчёт стоимости материалов
+    let costInfo = '';
+    if (priceInput) {
+        const pricePerM2 = parseLocaleNumber(priceInput.value);
+        if (!isNaN(pricePerM2) && pricePerM2 > 0) {
+            // Общая стоимость = площадь помещения × стоимость за м²
+            const totalCost = area * pricePerM2;
+            const formattedCost = totalCost.toLocaleString('ru-RU');
+            costInfo = `<div style="color: var(--text-primary); font-size: 0.95em; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color);"><strong>Общая стоимость материалов: ${formattedCost} ₽</strong></div>`;
+        }
+    }
+    
     resultEl.innerHTML = `
         <div style="color: var(--text-primary); line-height: 1.8;">
             <div><strong>Примерно ${estimatedPanels} панелей</strong></div>
             <div style="color: var(--text-secondary); font-size: 0.9em;">Дюбелей: ~${dowels} шт.</div>
             <div style="color: var(--text-secondary); font-size: 0.9em;">Время монтажа: ~${workTimeFormatted}</div>
+            ${costInfo}
             <div style="margin-top: 8px; font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
                 Это приблизительная оценка. Для точного расчёта используйте основной калькулятор.
             </div>
@@ -783,6 +804,12 @@ function updateURL() {
 function generateShareLink() {
     if (!calculator || !currentRoom) {
         showUserMessage('Сначала выполните расчёт', 'error');
+        return;
+    }
+    
+    // Проверка доступности необходимых API
+    if (typeof window === 'undefined' || !window.currentParams || !window.currentBestScheme) {
+        showUserMessage('Данные расчёта недоступны', 'error');
         return;
     }
     
@@ -824,12 +851,15 @@ function generateShareLink() {
 🔗 Посмотреть схему монтажа:
 ${shareUrl}`;
     
-    // Определяем, является ли устройство мобильным
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                     (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+    // Определяем, является ли устройство мобильным (улучшенная проверка)
+    const isMobile = typeof navigator !== 'undefined' && (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
+        (window.matchMedia && window.matchMedia('(max-width: 768px)').matches)
+    );
     
     // Используем Web Share API только на мобильных устройствах
-    if (isMobile && navigator.share) {
+    if (isMobile && typeof navigator !== 'undefined' && navigator.share) {
         // Используем нативное окно "Поделиться" на мобильных
         // Передаём только text, так как ссылка уже включена в текст
         navigator.share({
@@ -853,44 +883,87 @@ ${shareUrl}`;
 
 // Вспомогательная функция для копирования в буфер обмена
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showUserMessage('Расчёт скопирован в буфер обмена!', 'info');
-    }).catch(err => {
+    // Проверка доступности Clipboard API
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showUserMessage('Расчёт скопирован в буфер обмена!', 'info');
+        }).catch(err => {
+            // Fallback для старых браузеров
+            fallbackCopyToClipboard(text);
+        });
+    } else {
         // Fallback для старых браузеров
+        fallbackCopyToClipboard(text);
+    }
+}
+
+// Fallback метод копирования для старых браузеров
+function fallbackCopyToClipboard(text) {
+    try {
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
         document.body.appendChild(textArea);
+        textArea.focus();
         textArea.select();
-        try {
-            document.execCommand('copy');
-            showUserMessage('Расчёт скопирован в буфер обмена!', 'info');
-        } catch (err) {
-            prompt('Скопируйте сообщение:', text);
-        }
+        
+        const successful = document.execCommand('copy');
         document.body.removeChild(textArea);
-    });
+        
+        if (successful) {
+            showUserMessage('Расчёт скопирован в буфер обмена!', 'info');
+        } else {
+            showUserMessage('Не удалось скопировать. Скопируйте вручную.', 'error');
+        }
+    } catch (err) {
+        console.error('Ошибка при копировании:', err);
+        showUserMessage('Не удалось скопировать. Скопируйте вручную.', 'error');
+    }
 }
 
 // Функция загрузки параметров из URL
 function loadFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
+    let hasParams = false;
     
     if (urlParams.has('l')) {
         document.getElementById('mainLength').value = parseFloat(urlParams.get('l')).toFixed(2);
+        hasParams = true;
     }
     if (urlParams.has('w')) {
         document.getElementById('mainWidth').value = parseFloat(urlParams.get('w')).toFixed(2);
+        hasParams = true;
     }
     if (urlParams.has('ll') && urlParams.has('lw')) {
         document.getElementById('hasLeg').checked = true;
         document.getElementById('legFields').style.display = 'block';
         document.getElementById('legLength').value = parseFloat(urlParams.get('ll')).toFixed(2);
         document.getElementById('legWidth').value = parseFloat(urlParams.get('lw')).toFixed(2);
+        hasParams = true;
     }
     if (urlParams.has('p')) {
         document.getElementById('pricePerM2').value = urlParams.get('p');
+        hasParams = true;
+    }
+    
+    // Если есть параметры в URL, автоматически открываем блок параметров
+    if (hasParams) {
+        const paramsCard = document.getElementById('paramsCalcCard');
+        const paramsButton = document.getElementById('toggleParamsCalc');
+        if (paramsCard && paramsButton) {
+            paramsCard.classList.add('expanded');
+            paramsButton.classList.add('expanded-btn');
+            paramsButton.textContent = 'Скрыть расчёт по параметрам';
+            const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
+                <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/>
+            </svg>`;
+            paramsButton.innerHTML = icon + ' Скрыть расчёт по параметрам';
+        }
     }
 }
 
@@ -899,6 +972,35 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeVisualizers();
     setupLegToggle();
     setupEventListeners();
+    
+    // Убираем фокус при клике вне полей ввода, чтобы не появлялся курсор ввода
+    document.addEventListener('mousedown', (e) => {
+        const target = e.target;
+        // Если клик не на поле ввода, textarea или contenteditable элементе, убираем фокус
+        if (target.tagName !== 'INPUT' && 
+            target.tagName !== 'TEXTAREA' && 
+            !target.hasAttribute('contenteditable')) {
+            // Убираем фокус с активного элемента, если это не поле ввода
+            if (document.activeElement && 
+                document.activeElement.tagName !== 'INPUT' && 
+                document.activeElement.tagName !== 'TEXTAREA' &&
+                !document.activeElement.hasAttribute('contenteditable')) {
+                document.activeElement.blur();
+            }
+        }
+    });
+    
+    // Убеждаемся, что блоки расчёта закрыты по умолчанию
+    const paramsCard = document.getElementById('paramsCalcCard');
+    const quickCalcCard = document.getElementById('quickCalcCard');
+    const paramsButton = document.getElementById('toggleParamsCalc');
+    const quickCalcButton = document.getElementById('toggleQuickCalc');
+    
+    // Удаляем классы expanded и expanded-btn, если они есть
+    if (paramsCard) paramsCard.classList.remove('expanded');
+    if (quickCalcCard) quickCalcCard.classList.remove('expanded');
+    if (paramsButton) paramsButton.classList.remove('expanded-btn');
+    if (quickCalcButton) quickCalcButton.classList.remove('expanded-btn');
     
     // Загружаем параметры из URL (если есть)
     loadFromURL();
@@ -915,10 +1017,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     // Тема: загрузка и обработчик для переключателя checkbox
+    // По умолчанию всегда светлая тема при первой загрузке
     try {
         const savedTheme = localStorage.getItem('mf_theme');
         const isDark = savedTheme === 'dark';
-        if (isDark) document.body.classList.add('theme-dark');
+        
+        // Применяем тёмную тему только если пользователь явно выбрал её ранее
+        // По умолчанию всегда светлая тема
+        if (isDark) {
+            document.body.classList.add('theme-dark');
+        } else {
+            // Убеждаемся, что тёмная тема не применена
+            document.body.classList.remove('theme-dark');
+        }
 
         const switchEl = document.getElementById('themeSwitch');
         if (switchEl) {
@@ -931,32 +1042,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch (e) {
         // localStorage может быть недоступен в приватных режимах — безопасно игнорируем
+        // Убеждаемся, что тёмная тема не применена
+        document.body.classList.remove('theme-dark');
     }
     
     // Автоматический расчет при загрузке с параметрами по умолчанию
     calculateAllSchemes();
 });
 
+// Функция переключения блока расчёта по параметрам
+function toggleParamsCalc() {
+    const card = document.getElementById('paramsCalcCard');
+    const button = document.getElementById('toggleParamsCalc');
+    
+    if (!card || !button) return;
+    
+    const isExpanded = card.classList.contains('expanded');
+    
+    if (isExpanded) {
+        card.classList.remove('expanded');
+        button.classList.remove('expanded-btn');
+        button.textContent = 'Расчёт по параметрам';
+        const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+            <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/>
+        </svg>`;
+        button.innerHTML = icon + ' Расчёт по параметрам';
+    } else {
+        card.classList.add('expanded');
+        button.classList.add('expanded-btn');
+        button.textContent = 'Скрыть расчёт по параметрам';
+        const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+            <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/>
+        </svg>`;
+        button.innerHTML = icon + ' Скрыть расчёт по параметрам';
+    }
+}
+
 // Функция переключения блока быстрого расчёта
 function toggleQuickCalc() {
     const card = document.getElementById('quickCalcCard');
     const button = document.getElementById('toggleQuickCalc');
     
-    if (card.style.display === 'none') {
-        card.style.display = 'block';
+    if (!card || !button) return;
+    
+    const isExpanded = card.classList.contains('expanded');
+    
+    if (isExpanded) {
+        card.classList.remove('expanded');
+        button.classList.remove('expanded-btn');
+        button.textContent = 'Расчёт по площади';
+        const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+        button.innerHTML = icon + ' Расчёт по площади';
+    } else {
+        card.classList.add('expanded');
+        button.classList.add('expanded-btn');
         button.textContent = 'Скрыть расчёт по площади';
-        // Сохраняем иконку
         const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
             <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>`;
         button.innerHTML = icon + ' Скрыть расчёт по площади';
-    } else {
-        card.style.display = 'none';
-        button.textContent = 'Рассчитать по площади';
-        const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
-            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>`;
-        button.innerHTML = icon + ' Рассчитать по площади';
     }
 }
 
@@ -966,4 +1118,5 @@ window.renderScheme = renderScheme;
 window.quickCalculate = quickCalculate;
 window.generateShareLink = generateShareLink;
 window.toggleQuickCalc = toggleQuickCalc;
+window.toggleParamsCalc = toggleParamsCalc;
 

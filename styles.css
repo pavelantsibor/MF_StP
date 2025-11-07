@@ -1,7 +1,73 @@
+/* Оптимизация производительности */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Скрываем курсор ввода текста для всех элементов, кроме полей ввода */
+*:not(input):not(textarea):not([contenteditable="true"]) {
+    caret-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Разрешаем курсор и выделение только для полей ввода */
+input,
+textarea,
+[contenteditable="true"] {
+    caret-color: auto;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+/* Дополнительно скрываем курсор для кнопок и других интерактивных элементов */
+button,
+a,
+label,
+.card,
+.form-group,
+.error-message,
+.static-field,
+h1, h2, h3, h4, h5, h6,
+span,
+div:not([contenteditable="true"]) {
+    caret-color: transparent !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+/* Предотвращаем получение фокуса элементами, которые не должны его получать */
+button:focus,
+a:focus,
+label:focus,
+.card:focus,
+.form-group:focus,
+.error-message:focus,
+.static-field:focus,
+h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus,
+span:focus,
+div:focus:not([contenteditable="true"]):not(input):not(textarea) {
+    outline: none !important;
+    caret-color: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 :root {
@@ -36,6 +102,29 @@ body.theme-dark {
     --shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.5);
     --heading-color: #ffffff;
+    background: linear-gradient(135deg, #2d2e33 0%, #26272c 50%, #2a2b30 100%);
+    background-attachment: fixed;
+}
+
+body.theme-dark::before {
+    background: transparent;
+}
+
+/* Глассморфизм для тёмной темы */
+body.theme-dark .card {
+    background: rgba(47, 48, 54, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+body.theme-dark .card::before {
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent
+    );
 }
 
 /* Чекбоксы в тёмной теме — более светлый цвет для видимости */
@@ -50,11 +139,27 @@ body.theme-dark input[type="checkbox"]:checked {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: var(--bg-page);
+    background: linear-gradient(135deg, #f5f7f8 0%, #e8ecef 50%, #f0f2f4 100%);
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     padding: 16px;
     line-height: 1.6;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(1, 100, 79, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(1, 100, 79, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 html {
@@ -96,9 +201,25 @@ html {
     padding: 16px;
     background: #01644f;
     border-radius: 16px;
-    box-shadow: var(--shadow);
-    border: 1px solid #01644f;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.3), 
+        transparent
+    );
+    pointer-events: none;
 }
 
 .header h1 {
@@ -213,12 +334,71 @@ html {
 }
 
 .card {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-radius: 16px;
     padding: 16px;
     margin-bottom: 16px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.5), 
+        transparent
+    );
+    pointer-events: none;
+}
+
+/* Анимация раскрытия для блоков расчёта */
+#paramsCalcCard,
+#quickCalcCard {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease-out,
+                margin-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#paramsCalcCard.expanded,
+#quickCalcCard.expanded {
+    max-height: 2000px;
+    opacity: 1;
+    margin-bottom: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+/* Сохраняем стили для quickCalcCard */
+#quickCalcCard {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(245, 247, 248, 0.5));
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 2px dashed rgba(225, 229, 232, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark #quickCalcCard {
+    background: linear-gradient(135deg, rgba(47, 48, 54, 0.6), rgba(38, 39, 44, 0.5));
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 .card h2 {
@@ -266,22 +446,41 @@ html {
 .static-field {
     width: 100%;
     padding: 10px;
-    background: var(--bg-subtle);
-    border: 1px dashed var(--border-color);
+    background: rgba(245, 247, 248, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px dashed rgba(225, 229, 232, 0.5);
     border-radius: 10px;
     color: var(--text-primary);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
+}
+
+body.theme-dark .static-field {
+    background: rgba(38, 39, 44, 0.5);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.2);
 }
 
 .form-group input[type="number"],
 .form-group input[type="text"] {
     width: 100%;
     padding: 10px 12px;
-    background: var(--bg-subtle);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(225, 229, 232, 0.5);
     border-radius: 10px;
     color: var(--text-primary);
     font-size: 0.95rem;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
+}
+
+body.theme-dark .form-group input[type="number"],
+body.theme-dark .form-group input[type="text"] {
+    background: rgba(47, 48, 54, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.2);
 }
 
 /* Стили для стрелок прокрутки полей number */
@@ -318,14 +517,16 @@ body.theme-dark .form-group input[type="number"]::-webkit-outer-spin-button:hove
 .form-group input[type="text"]:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 4px rgba(1, 100, 79, 0.12);
-    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(1, 100, 79, 0.12), 0 4px 16px 0 rgba(1, 100, 79, 0.15);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
 
 body.theme-dark .form-group input[type="number"]:focus,
 body.theme-dark .form-group input[type="text"]:focus {
-    background: var(--bg-card);
-    box-shadow: 0 0 0 4px rgba(1, 100, 79, 0.2);
+    background: rgba(47, 48, 54, 0.8);
+    box-shadow: 0 0 0 4px rgba(1, 100, 79, 0.2), 0 4px 16px 0 rgba(0, 0, 0, 0.3);
 }
 
 .form-group input[type="checkbox"] {
@@ -356,7 +557,7 @@ body.theme-dark .form-group input[type="text"]:focus {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
 }
 
 .btn:hover {
@@ -367,15 +568,50 @@ body.theme-dark .form-group input[type="text"]:focus {
 }
 
 .btn-secondary {
-    background: var(--bg-subtle);
+    background: rgba(245, 247, 248, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(225, 229, 232, 0.5);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark .btn-secondary {
+    background: rgba(38, 39, 44, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Зелёные кнопки для раскрывающихся блоков в сложенном состоянии */
+#toggleParamsCalc:not(.expanded-btn),
+#toggleQuickCalc:not(.expanded-btn) {
+    background: #01644f;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+}
+
+#toggleParamsCalc:not(.expanded-btn):hover,
+#toggleQuickCalc:not(.expanded-btn):hover {
+    background: #015a47;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn-secondary:hover {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.15);
+    border-color: rgba(225, 229, 232, 0.6);
+}
+
+body.theme-dark .btn-secondary:hover {
+    background: rgba(47, 48, 54, 0.8);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.4);
 }
 
 .btn:active {
@@ -424,17 +660,26 @@ body.theme-dark .form-group input[type="text"]:focus {
 
 .canvas-container {
     position: relative;
-    background: var(--bg-subtle);
+    background: rgba(245, 247, 248, 0.4);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-radius: 12px;
     padding: 16px;
     min-height: 500px;
     max-height: 700px;
     overflow: hidden;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(225, 229, 232, 0.3);
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark .canvas-container {
+    background: rgba(38, 39, 44, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 /* Подсказка удалена для улучшения UX на мобильных устройствах */
@@ -493,6 +738,11 @@ canvas {
     max-width: 100%;
     max-height: 600px;
     flex-shrink: 0;
+    /* Оптимизация рендеринга */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    will-change: transform;
+    contain: layout style paint;
 }
 
 .canvas-controls {
@@ -501,19 +751,30 @@ canvas {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
     padding: 10px;
     border-radius: 10px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     z-index: 10;
     margin-top: 10px;
+}
+
+body.theme-dark .canvas-controls {
+    background: rgba(47, 48, 54, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
 }
 
 .icon-btn {
     width: 36px;
     height: 36px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
+    border: 1px solid rgba(225, 229, 232, 0.4);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--text-primary);
     border-radius: 8px;
     cursor: pointer;
@@ -522,6 +783,13 @@ canvas {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+}
+
+body.theme-dark .icon-btn {
+    background: rgba(47, 48, 54, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.3);
 }
 
 .icon-btn:hover {
@@ -543,14 +811,48 @@ canvas {
 }
 
 .stat-card {
-    background: var(--bg-subtle);
+    background: rgba(245, 247, 248, 0.5);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
     padding: 12px 16px;
     border-radius: 10px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(225, 229, 232, 0.4);
     text-align: center;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.6), 
+        transparent
+    );
+    pointer-events: none;
+}
+
+body.theme-dark .stat-card {
+    background: rgba(38, 39, 44, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+}
+
+body.theme-dark .stat-card::before {
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent
+    );
 }
 
 .stat-card-button {
@@ -605,6 +907,25 @@ canvas {
     .input-panel {
         position: static;
         max-height: none;
+    }
+    
+    .stats-panel {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        padding: 0 12px;
+    }
+    
+    .stats-panel {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .card {
+        padding: 14px;
     }
 }
 
@@ -664,14 +985,55 @@ canvas {
 }
 
 @media (max-width: 480px) {
+    body {
+        padding: 8px;
+    }
+    
+    .container {
+        padding: 0 8px;
+    }
+    
     .header {
         padding-top: 55px;
+        padding: 55px 12px 16px;
     }
 
     .brand-logo {
         left: 8px;
         top: 8px;
         height: 40px;
+    }
+    
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .card {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .btn {
+        padding: 14px 18px;
+        font-size: 1rem;
+    }
+    
+    .stats-panel {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .stat-value {
+        font-size: 1.4rem;
+    }
+    
+    .form-group input[type="number"],
+    .form-group input[type="text"] {
+        font-size: 16px; /* Предотвращает зум на iOS */
     }
 }
 
@@ -708,7 +1070,7 @@ body:not(.theme-dark) .scheme-header h2 {
     padding: 12px 16px;
     background: #01644f;
     color: #ffffff;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     font-size: 1.1rem;
     font-weight: 600;
@@ -719,10 +1081,12 @@ body:not(.theme-dark) .scheme-header h2 {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     line-height: 1.3;
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-print-arrow {
@@ -736,18 +1100,21 @@ body:not(.theme-dark) .scheme-header h2 {
 .btn-print:hover {
     background: #015a47;
     transform: translateY(-1px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn-print:active {
     transform: scale(0.98);
+    background: #015a47;
 }
 
 .btn-share-compact {
     padding: 6px 12px;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--text-secondary);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(225, 229, 232, 0.4);
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.85rem;
@@ -756,6 +1123,13 @@ body:not(.theme-dark) .scheme-header h2 {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
+}
+
+body.theme-dark .btn-share-compact {
+    background: rgba(47, 48, 54, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn-share-compact:hover {
@@ -777,19 +1151,39 @@ body:not(.theme-dark) .scheme-header h2 {
     align-items: center;
     gap: 5px;
     padding: 8px 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(225, 229, 232, 0.4);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.9rem;
     color: var(--text-primary);
+}
+
+body.theme-dark .canvas-checkbox {
+    background: rgba(47, 48, 54, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.3);
+}
+
+.canvas-checkbox {
     user-select: none;
 }
 
 .canvas-checkbox:hover {
-    background: var(--bg-subtle);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     border-color: var(--accent-color);
+    box-shadow: 0 4px 12px 0 rgba(1, 100, 79, 0.2);
+}
+
+body.theme-dark .canvas-checkbox:hover {
+    background: rgba(47, 48, 54, 0.7);
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
 }
 
 .canvas-checkbox input[type="checkbox"] {

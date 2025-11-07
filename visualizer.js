@@ -654,3 +654,7 @@ function renderScheme(schemeId) {
     visualizer.render(showGrid, showNumbers);
 }
 
+// Экспорт функций в window для использования в HTML
+window.zoomCanvas = zoomCanvas;
+window.resetCanvasView = resetCanvasView;
+

@@ -2,11 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Калькулятор MultiFRAME - расчёт и визуализация схем монтажа панелей на потолке">
+    <meta name="theme-color" content="#01644f">
     <title>Калькулятор MultiFRAME</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -18,20 +20,18 @@
 
         <div class="main-content">
             <div class="input-panel">
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h2 style="margin: 0;">Параметры потолка</h2>
-                        <div class="theme-toggle">
-                            <label class="theme-switch" title="Переключить тему">
-                                <input type="checkbox" id="themeSwitch" aria-label="Переключатель темы">
-                                <span class="switch-track">
-                                    <span class="icon-sun" aria-hidden="true"></span>
-                                    <span class="icon-moon" aria-hidden="true"></span>
-                                    <span class="switch-thumb"></span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
+                <button class="btn btn-secondary" id="toggleParamsCalc" onclick="toggleParamsCalc()" style="margin-bottom: 16px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                        <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/>
+                    </svg>
+                    Расчёт по параметрам
+                </button>
+
+                <div class="card" id="paramsCalcCard">
+                    <h2 style="margin: 0;">Параметры потолка</h2>
                     <div class="form-group">
                         <label for="mainLength" title="Минимальное значение: 0.1 м, максимальное: 100 м">
                             Длина помещения (м):
@@ -70,35 +70,14 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2>Параметры панелей</h2>
-                    <div class="form-group">
-                        <label title="Размер панели учитывает эффективную площадь с учётом шип-паз соединения (0,735 × 0,535 м для расчёта)">
-                            Размер панели:
-                        </label>
-                        <div class="static-field">0,75 м × 0,55 м</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2>Стоимость</h2>
-                    <div class="form-group">
-                        <label for="pricePerM2" title="Введите стоимость одного квадратного метра панелей">
-                            Стоимость за м² (руб):
-                        </label>
-                        <input type="number" id="pricePerM2" value="6000" step="1" min="0" max="1000000">
-                        <span class="error-message" id="pricePerM2Error"></span>
-                    </div>
-                </div>
-
                 <button class="btn btn-secondary" id="toggleQuickCalc" onclick="toggleQuickCalc()" style="margin-bottom: 16px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
                         <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    Рассчитать по площади
+                    Расчёт по площади
                 </button>
 
-                <div class="card" id="quickCalcCard" style="background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-subtle) 100%); border: 2px dashed var(--border-color); display: none;">
+                <div class="card" id="quickCalcCard">
                     <h2 style="display: flex; align-items: center; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
                             <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="var(--heading-color)" stroke="var(--heading-color)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -116,6 +95,27 @@
                     </div>
                     <div id="quickResult" style="margin-top: 12px; padding: 12px; background: var(--bg-card); border-radius: 8px; min-height: 60px;">
                         <span style="color: var(--text-secondary);">Введите площадь помещения</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Параметры панелей</h2>
+                    <div class="form-group">
+                        <label title="Размер панели учитывает эффективную площадь с учётом шип-паз соединения (0,735 × 0,535 м для расчёта)">
+                            Размер панели:
+                        </label>
+                        <div class="static-field">0,75 м × 0,55 м</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Стоимость</h2>
+                    <div class="form-group">
+                        <label for="pricePerM2" title="Введите стоимость одного квадратного метра панелей">
+                            Стоимость за м² (руб):
+                        </label>
+                        <input type="number" id="pricePerM2" value="6000" step="1" min="0" max="1000000" oninput="quickCalculate()">
+                        <span class="error-message" id="pricePerM2Error"></span>
                     </div>
                 </div>
 
@@ -141,7 +141,19 @@
 
             <div class="visualization-panel">
                 <div class="card">
-                    <h2 id="selectedSchemeTitle">Схема монтажа</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h2 id="selectedSchemeTitle" style="margin: 0;">Схема монтажа</h2>
+                        <div class="theme-toggle">
+                            <label class="theme-switch" title="Переключить тему">
+                                <input type="checkbox" id="themeSwitch" aria-label="Переключатель темы">
+                                <span class="switch-track">
+                                    <span class="icon-sun" aria-hidden="true"></span>
+                                    <span class="icon-moon" aria-hidden="true"></span>
+                                    <span class="switch-thumb"></span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
 
                     <div class="canvas-container">
                         <div class="canvas-wrapper" id="bestScheme">

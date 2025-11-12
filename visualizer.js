@@ -210,36 +210,7 @@ class SchemeVisualizer {
 
     // Рисование сетки
     drawGrid(showGrid) {
-        if (!showGrid || !this.currentRoom) return;
-
-        this.ctx.strokeStyle = '#e0e0e0';
-        this.ctx.lineWidth = 0.5;
-        
-        const width = Math.max(this.currentRoom.mainLength, this.currentRoom.legLength);
-        const height = this.currentRoom.mainWidth + this.currentRoom.legWidth;
-        
-        const scale = (this.currentScale || this.scale);
-        const scaledWidth = width * scale;
-        const scaledHeight = height * scale;
-        
-        const offsetX = 50 + this.panX;
-        const offsetY = 50 + this.panY;
-        
-        // Вертикальные линии
-        for (let x = 0; x <= scaledWidth; x += scale) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x + offsetX, offsetY);
-            this.ctx.lineTo(x + offsetX, scaledHeight + offsetY);
-            this.ctx.stroke();
-        }
-        
-        // Горизонтальные линии
-        for (let y = 0; y <= scaledHeight; y += scale) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(offsetX, y + offsetY);
-            this.ctx.lineTo(scaledWidth + offsetX, y + offsetY);
-            this.ctx.stroke();
-        }
+        return;
     }
 
     // Рисование помещения

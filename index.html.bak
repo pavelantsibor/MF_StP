@@ -20,17 +20,17 @@
 
         <div class="main-content">
             <div class="input-panel">
-                <div class="calc-group" id="paramsGroup">
-                    <button class="btn btn-secondary" id="toggleParamsCalc" onclick="toggleParamsCalc()" style="margin-bottom: 16px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
-                            <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
-                            <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
-                            <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
-                            <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/>
-                        </svg>
-                        Расчёт по параметрам
-                    </button>
-                    <div class="card" id="paramsCalcCard">
+                <button class="btn btn-secondary" id="toggleParamsCalc" onclick="toggleParamsCalc()" style="margin-bottom: 16px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                        <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/>
+                    </svg>
+                    Расчёт по параметрам
+                </button>
+
+                <div class="card" id="paramsCalcCard">
                     <h2 style="margin: 0;">Параметры потолка</h2>
                     <div class="form-group">
                         <label for="mainLength" title="Минимальное значение: 0.1 м, максимальное: 100 м">
@@ -68,64 +68,62 @@
                             <span class="error-message" id="legWidthError"></span>
                         </div>
                     </div>
-                    </div>
-                    <p class="calc-mode-hint hint-collapsed">
-                        • Точный расчёт: параметры потолка и схема для прямоугольных и Г-образных комнат.
-                    </p>
                 </div>
 
-                <div class="calc-group" id="areaGroup">
-                    <button class="btn btn-secondary" id="toggleQuickCalc" onclick="toggleQuickCalc()" style="margin-bottom: 16px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
-                            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <button class="btn btn-secondary" id="toggleQuickCalc" onclick="toggleQuickCalc()" style="margin-bottom: 16px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                        <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Расчёт по площади
+                </button>
+
+                <div class="card" id="quickCalcCard">
+                    <h2 style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="var(--heading-color)" stroke="var(--heading-color)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                         Расчёт по площади
-                    </button>
-                    <div class="card" id="quickCalcCard">
-                        <h2 style="display: flex; align-items: center; gap: 8px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
-                                <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="var(--heading-color)" stroke="var(--heading-color)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Расчёт по площади
-                        </h2>
-                        <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 12px;">
-                            Приблизительная оценка по площади
-                        </p>
-                        <div class="form-group">
-                            <label for="quickArea">
-                                Площадь помещения (м²):
-                            </label>
-                            <input type="number" id="quickArea" placeholder="25" step="0.1" min="0.1" max="5000">
-                    </div>
-                    </div>
-                    <p class="calc-mode-hint hint-collapsed">
-                        • Приблизительный расчёт: оценка по площади для сложных планировок.
+                    </h2>
+                    <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 12px;">
+                        Грубая оценка по площади
                     </p>
+                    <div class="form-group">
+                        <label for="quickArea">
+                            Площадь помещения (м²):
+                        </label>
+                        <input type="number" id="quickArea" placeholder="25" step="0.1" min="0.1" max="5000" oninput="quickCalculate()">
+                    </div>
+                    <div id="quickResult" style="margin-top: 12px; padding: 12px; background: var(--bg-card); border-radius: 8px; min-height: 60px;">
+                        <span style="color: var(--text-secondary);">Введите площадь помещения</span>
+                    </div>
                 </div>
 
                 <div class="card">
                     <h2>Параметры панелей</h2>
                     <div class="form-group">
                         <label title="Размер панели учитывает эффективную площадь с учётом шип-паз соединения (0,735 × 0,535 м для расчёта)">
-                            Размер:
+                            Размер панели:
                         </label>
-                        <div class="static-field">0,75 × 0,55 м</div>
+                        <div class="static-field">0,75 м × 0,55 м</div>
                     </div>
+                </div>
+
+                <div class="card">
+                    <h2>Стоимость</h2>
                     <div class="form-group">
-                        <label>
-                            Площадь покрытия:
+                        <label for="pricePerM2" title="Введите стоимость одного квадратного метра панелей">
+                            Стоимость за м² (руб):
                         </label>
-                        <div class="static-field">0,40 м²</div>
+                        <input type="number" id="pricePerM2" value="6000" step="1" min="0" max="1000000" oninput="quickCalculate()">
+                        <span class="error-message" id="pricePerM2Error"></span>
                     </div>
-                    <div class="form-group">
-                        <label>
-                            РРЦ (рекомендованная розничная цена):
-                        </label>
-                        <div class="static-field">
-                            <div>Одна панель: 2 396 ₽</div>
-                            <div>За м²: 5 990 ₽</div>
-                        </div>
-                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="autoCalc">
+                        Автоматический рассчёт
+                    </label>
                 </div>
 
                 <button id="calculateBtn" class="btn btn-primary">
@@ -158,12 +156,7 @@
                     </div>
 
                     <div class="canvas-container">
-                        <div class="canvas-placeholder" id="schemePlaceholder">
-                            <div class="placeholder-card">
-                                Выполните расчёт, чтобы увидеть схему монтажа.
-                            </div>
-                        </div>
-                        <div class="canvas-wrapper hidden" id="bestScheme">
+                        <div class="canvas-wrapper" id="bestScheme">
                             <canvas id="canvas1"></canvas>
                             <div class="canvas-controls">
                                 <button class="icon-btn" title="Увеличить" style="font-weight:700;" onclick="zoomCanvas('bestScheme', 1.2)">+</button>
@@ -179,17 +172,14 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="canvas-wrapper hidden" id="areaSchemeWrapper">
-                            <canvas id="areaCanvas"></canvas>
-                        </div>
                     </div>
 
                     <div class="stats-panel">
-                        <div class="stat-card" data-stat="panels">
+                        <div class="stat-card">
                             <div class="stat-label">Всего панелей (с запасом)</div>
                             <div class="stat-value" id="totalPanels">0 шт.</div>
                         </div>
-                        <div class="stat-card" data-stat="coverage">
+                        <div class="stat-card">
                             <div class="stat-label">Площадь покрытия</div>
                             <div class="stat-value" id="coverageArea">0 м²</div>
                         </div>

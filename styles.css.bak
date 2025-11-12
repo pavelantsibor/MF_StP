@@ -567,30 +567,6 @@ body.theme-dark .form-group input[type="text"]:focus {
     box-shadow: var(--shadow-lg);
 }
 
-.calc-group {
-    margin-bottom: 24px;
-}
-
-.calc-group:last-child {
-    margin-bottom: 0;
-}
-
-.calc-mode-hint {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin: 0 0 6px;
-    line-height: 1.45;
-}
-
-.calc-mode-hint.hint-expanded {
-    margin-top: 8px;
-    margin-bottom: 16px;
-}
-
-.calc-mode-hint span {
-    display: inline-block;
-}
-
 .btn-secondary {
     background: rgba(245, 247, 248, 0.6);
     backdrop-filter: blur(10px);
@@ -607,28 +583,20 @@ body.theme-dark .btn-secondary {
 }
 
 /* Зелёные кнопки для раскрывающихся блоков в сложенном состоянии */
-.btn-secondary.expanded-btn {
+#toggleParamsCalc:not(.expanded-btn),
+#toggleQuickCalc:not(.expanded-btn) {
     background: #01644f;
-    color: #ffffff;
-    border-color: #01644f;
-    box-shadow: 0 6px 20px rgba(1, 100, 79, 0.25);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
 }
 
-.btn-secondary.expanded-btn:hover {
+#toggleParamsCalc:not(.expanded-btn):hover,
+#toggleQuickCalc:not(.expanded-btn):hover {
     background: #015a47;
-    border-color: #015a47;
-}
-
-body.theme-dark .btn-secondary.expanded-btn {
-    background: #02966f;
-    border-color: #02966f;
-    color: #ffffff;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-}
-
-body.theme-dark .btn-secondary.expanded-btn:hover {
-    background: #01795a;
-    border-color: #01795a;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn-secondary:hover {
@@ -758,73 +726,6 @@ body.theme-dark .canvas-container {
 }
 
 .canvas-wrapper.hidden {
-    display: none;
-}
-
-.canvas-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 360px;
-    padding: 32px;
-}
-
-.canvas-placeholder.hidden {
-    display: none;
-}
-
-.placeholder-card {
-    padding: 32px 40px;
-    border-radius: 16px;
-    background: rgba(245, 247, 248, 0.75);
-    border: 1px dashed rgba(1, 100, 79, 0.2);
-    color: var(--text-secondary);
-    font-size: 1rem;
-    text-align: center;
-    box-shadow: 0 10px 32px rgba(1, 100, 79, 0.08);
-}
-
-body.theme-dark .placeholder-card {
-    background: rgba(47, 48, 54, 0.65);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: var(--text-secondary);
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
-}
-
-#areaCanvas {
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    background: #f0f0f0;
-    box-shadow: var(--shadow);
-    max-width: 100%;
-    max-height: 600px;
-}
-
-body.area-mode .canvas-controls {
-    display: none;
-}
-
-body.area-mode #bestScheme {
-    display: none;
-}
-
-body.area-mode #areaSchemeWrapper.hidden {
-    display: none;
-}
-
-body.area-mode #areaSchemeWrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-}
-
-body.area-mode #selectedSchemeTitle {
-    color: var(--heading-color);
-}
-
-#areaSchemeWrapper .canvas-controls {
     display: none;
 }
 

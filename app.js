@@ -10,8 +10,8 @@ const VALIDATION = {
 
 const PANEL_PRICE_RUB = 2396;
 const PANEL_PRICE_PER_M2 = 5990;
-const PANEL_COVERAGE_AREA = 0.4;
-const PANEL_SIZE_DISPLAY = '0,75×0,55 м';
+const PANEL_COVERAGE_AREA = 0.735 * 0.535;
+const PANEL_SIZE_DISPLAY = '0,735×0,535 м';
 
 const CALC_MODES = {
     NONE: 'none',
@@ -434,9 +434,9 @@ function calculateAllSchemes() {
         const scheme3Panels = calculator.calculateScheme3();
         
         // Выбираем лучшую схему по площади покрытия (эффективной)
-        const stats1 = calculator.getStatistics(scheme1Panels, params.pricePerM2);
-        const stats2 = calculator.getStatistics(scheme2Panels, params.pricePerM2);
-        const stats3 = calculator.getStatistics(scheme3Panels, params.pricePerM2);
+        const stats1 = applyPanelPricing(calculator.getStatistics(scheme1Panels, params.pricePerM2));
+        const stats2 = applyPanelPricing(calculator.getStatistics(scheme2Panels, params.pricePerM2));
+        const stats3 = applyPanelPricing(calculator.getStatistics(scheme3Panels, params.pricePerM2));
         
         const schemes = [
             { name: 'Горизонтальная', panels: scheme1Panels, stats: stats1, coverage: parseFloat(stats1.coverageArea) },
@@ -474,7 +474,7 @@ function calculateAllSchemes() {
         renderScheme('bestScheme');
         
         // Обновляем статистику
-        lastPanelStats = calculator.getStatistics(bestScheme.panels, params.pricePerM2);
+        lastPanelStats = applyPanelPricing(calculator.getStatistics(bestScheme.panels, params.pricePerM2));
         updateStatisticsPanelMode(lastPanelStats, params.room.getTotalArea());
         updateResultsTextForParams(params, lastPanelStats, bestScheme.name);
         currentAreaResult = null;
@@ -534,6 +534,17 @@ function formatCurrency(value) {
     return Math.round(value).toLocaleString('ru-RU');
 }
 
+function applyPanelPricing(stats) {
+    if (!stats) return stats;
+    const totalCostWithoutReserve = stats.total * PANEL_PRICE_RUB;
+    const totalCostWithReserve = stats.withReserve * PANEL_PRICE_RUB;
+
+    stats.totalCostWithoutReserve = totalCostWithoutReserve;
+    stats.totalCostWithReserve = totalCostWithReserve;
+    stats.totalCost = totalCostWithReserve;
+    return stats;
+}
+
 function getCoverageDisplay(stats, roomArea) {
     const areaValue = Math.min(stats.total * PANEL_COVERAGE_AREA, roomArea);
     const percent = roomArea > 0 ? Math.min(100, (areaValue / roomArea) * 100) : 0;
@@ -575,7 +586,7 @@ function updateStatisticsPanelMode(stats, roomArea) {
     updateStatisticsSummary({
         panelsText: `${stats.withReserve} шт.`,
         coverageText: `${coverage.areaText} м² (${coverage.percentText}%)`,
-        costText: `${formatCurrency(stats.totalCost)} ₽`
+        costText: `${formatCurrency(stats.totalCostWithReserve)} ₽`
     });
 }
 
@@ -609,14 +620,18 @@ function updateResultsTextForParams(params, stats, schemeName) {
     }
     lines.push(`Площадь помещения: ${roomArea.toFixed(2)} м²`);
     lines.push('');
-    lines.push(`Всего панелей: ${stats.total}  | с 5% запасом: ${stats.withReserve}`);
+    lines.push(`Всего панелей (без запаса): ${stats.total}`);
+    lines.push(`Всего панелей (с запасом 5%): ${stats.withReserve}`);
     lines.push(`Площадь покрытия: ${coverage.areaText} м² (${coverage.percentText}%)`);
     lines.push(`Дюбель-гвозди: ${stats.dowels.withReserve} шт. (с запасом 15%)`);
     lines.push(`Ориентировочное время монтажа: ${stats.workTime.formatted}`);
-    lines.push(`Общая стоимость материалов: ${formatCurrency(stats.totalCost)} ₽`);
+    lines.push(`Общая стоимость материалов (без запаса): ${formatCurrency(stats.totalCostWithoutReserve)} ₽`);
+    lines.push(`Общая стоимость материалов (с запасом 5%): ${formatCurrency(stats.totalCostWithReserve)} ₽`);
 
     const text = lines.join('\n');
-    resultsEl.innerHTML = text.replace(/Общая стоимость материалов:/g, '<strong>Общая стоимость материалов:</strong>');
+    resultsEl.innerHTML = text
+        .replace(/Общая стоимость материалов \(без запаса\):/g, '<strong>Общая стоимость материалов (без запаса):</strong>')
+        .replace(/Общая стоимость материалов \(с запасом 5%\):/g, '<strong>Общая стоимость материалов (с запасом 5%):</strong>');
 }
 
 function updateResultsTextForArea(areaStats) {
@@ -636,7 +651,8 @@ function updateResultsTextForArea(areaStats) {
     lines.push(`Общая стоимость материалов: ${formatCurrency(areaStats.totalCost)} ₽`);
 
     const text = lines.join('\n');
-    resultsEl.innerHTML = text.replace(/Общая стоимость материалов:/g, '<strong>Общая стоимость материалов:</strong>');
+    resultsEl.innerHTML = text
+        .replace(/ ठ \( ᮬ\):/g, '<strong> ठ ( ᮬ):</strong>');
 }
 
 // Управление чекбоксом выступа
@@ -834,7 +850,7 @@ async function saveAreaPdf() {
                                 <div>Дюбель-гвозди: ${currentAreaResult.dowelsWithReserve} шт. (с запасом 15%)</div>
                                 <div>Ориентировочное время монтажа: ${currentAreaResult.workTimeFormatted}</div>
                                 <div style="font-weight: bold; color: ${brandColor}; font-size: 14px; margin-top: 6px;">
-                                    Общая стоимость материалов: ${formatCurrency(currentAreaResult.totalCost)} ₽
+                                     ठ ( ᮬ): ${formatCurrency(currentAreaResult.totalCost)} ₽
                                 </div>
                             </div>
                         </div>
@@ -968,13 +984,17 @@ async function saveToPDF() {
                                 Результаты расчёта:
                             </h2>
                             <div style="font-size: 12px; line-height: 1.6; color: #444; padding-left: 10px;">
-                                <div>Всего панелей: ${stats.total} шт. (с запасом 5%: ${stats.withReserve} шт.)</div>
+                                <div>Всего панелей (без запаса): ${stats.total} шт.</div>
+                                <div>Всего панелей (с запасом 5%): ${stats.withReserve} шт.</div>
                                 <div>Площадь покрытия: ${coverage.areaText} м² (${coverage.percentText}%)</div>
                                 <div>Дюбель-гвозди: ${stats.dowels.withReserve} шт. (с запасом 15%)</div>
                                 <div>Ориентировочное время монтажа: ${stats.workTime.formatted}</div>
                                 <div>РРЦ панели: ${formatCurrency(PANEL_PRICE_RUB)} ₽ | РРЦ за м²: ${formatCurrency(PANEL_PRICE_PER_M2)} ₽</div>
                                 <div style="font-weight: bold; color: ${brandColor}; font-size: 14px; margin-top: 6px;">
-                                    Общая стоимость материалов: ${formatCurrency(stats.totalCost)} ₽
+                                     ठ ( ᮬ): ${formatCurrency(stats.totalCostWithoutReserve)} ₽
+                                </div>
+                                <div style="font-weight: bold; color: ${brandColor}; font-size: 14px;">
+                                     ⮨ ठ ( ᮬ 5%): ${formatCurrency(stats.totalCostWithReserve)} ₽
                                 </div>
                             </div>
                         </div>
@@ -1121,7 +1141,7 @@ function calculateAreaEstimation() {
         ? `${workTimeHours} ч ${workTimeRemainingMinutes} мин`
         : `${workTimeMinutes} мин`;
     
-    const totalCost = area * PANEL_PRICE_PER_M2;
+    const totalCost = panels * PANEL_PRICE_RUB;
     
     currentAreaResult = {
         area,
@@ -1228,7 +1248,7 @@ ${shareUrl}`;
     const shareUrl = window.location.href;
     const params = window.currentParams;
     const bestScheme = window.currentBestScheme;
-    const stats = calculator.getStatistics(bestScheme.panels, params.pricePerM2);
+    const stats = applyPanelPricing(calculator.getStatistics(bestScheme.panels, params.pricePerM2));
     const roomArea = params.room.getTotalArea();
     const coverage = getCoverageDisplay(stats, roomArea);
     

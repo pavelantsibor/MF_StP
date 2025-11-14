@@ -111,6 +111,25 @@ class PanelCalculator {
         return panels.length + 1;
     }
 
+    // Перенумерация панелей для последовательной нумерации
+    renumberPanels(panels) {
+        // Сортируем панели по позиции: сначала по Y (сверху вниз), затем по X (слева направо)
+        const sortedPanels = [...panels].sort((a, b) => {
+            const yDiff = a.y - b.y;
+            if (Math.abs(yDiff) > 1e-6) {
+                return yDiff;
+            }
+            return a.x - b.x;
+        });
+        
+        // Перенумеровываем последовательно от 1
+        sortedPanels.forEach((panel, index) => {
+            panel.number = index + 1;
+        });
+        
+        return sortedPanels;
+    }
+
     // Размещение панелей в прямоугольной области (основная часть или выступ)
     placePanelsInRectangularArea(startX, startY, length, width, startPanelNumber, existingPanels) {
         const panels = [];
@@ -328,6 +347,8 @@ class PanelCalculator {
         
         // Оптимизация для максимального покрытия
         let optimized = this.maximizeCoverage(panels);
+        // Перенумеровываем панели для последовательной нумерации
+        optimized = this.renumberPanels(optimized);
         return optimized;
     }
 
@@ -389,6 +410,8 @@ class PanelCalculator {
         
         // Оптимизация для максимального покрытия
         let optimized = this.maximizeCoverage(panels);
+        // Перенумеровываем панели для последовательной нумерации
+        optimized = this.renumberPanels(optimized);
         return optimized;
     }
 
@@ -419,8 +442,6 @@ class PanelCalculator {
                     !this.checkPanelCollision(panel, panels)) {
                     panel.number = panelNumber++;
                     panels.push(panel);
-                } else {
-                    panelNumber++;
                 }
             }
             x += this.panelWidth;
@@ -448,8 +469,6 @@ class PanelCalculator {
                     !this.checkPanelCollision(panel, panels)) {
                     panel.number = panelNumber++;
                     panels.push(panel);
-                } else {
-                    panelNumber++;
                 }
                 x += this.panelLength;
             }
@@ -458,6 +477,8 @@ class PanelCalculator {
         
         // Оптимизация для максимального покрытия
         let optimized = this.maximizeCoverage(panels);
+        // Перенумеровываем панели для последовательной нумерации
+        optimized = this.renumberPanels(optimized);
         return optimized;
     }
 

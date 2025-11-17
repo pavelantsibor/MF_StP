@@ -5,7 +5,7 @@ const VALIDATION = {
     MIN_PRICE: 0,
     MAX_PRICE: 1000000,
     MIN_TOTAL_AREA: 0.1,
-    MAX_TOTAL_AREA: 5000 // м²
+    MAX_TOTAL_AREA: 10000 // м²
 };
 
 const PANEL_PRICE_RUB = 2396;
@@ -270,11 +270,11 @@ function renderAreaScheme(area) {
     ctx.setLineDash([]);
 
     ctx.fillStyle = '#4b5563';
-    ctx.font = '600 36px "Segoe UI", Arial';
+    ctx.font = '600 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(hasArea ? `${area.toFixed(2)} м²` : 'Введите площадь', width / 2, height / 2);
 
-    ctx.font = '500 28px "Segoe UI", Arial';
+    ctx.font = '500 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     ctx.fillStyle = '#636d78';
     ctx.fillText('? м', width / 2, 30);
     ctx.save();
@@ -312,12 +312,16 @@ function setCalculationMode(mode) {
 
     if (paramsButton) {
         paramsButton.classList.toggle('expanded-btn', isParamsExpanded);
-        paramsButton.innerHTML = `${ICON_PARAMS} Расчёт по параметрам`;
+        const indicator = paramsButton.querySelector('.toggle-indicator');
+        const icon = ICON_PARAMS;
+        paramsButton.innerHTML = `<svg class="toggle-indicator" width="10" height="10" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 0L6 6H0L3 0Z" fill="currentColor" opacity="0.5"/></svg>${icon} Расчёт по параметрам`;
     }
 
     if (quickButton) {
         quickButton.classList.toggle('expanded-btn', isAreaExpanded);
-        quickButton.innerHTML = `${ICON_AREA} Расчёт по площади`;
+        const indicator = quickButton.querySelector('.toggle-indicator');
+        const icon = ICON_AREA;
+        quickButton.innerHTML = `<svg class="toggle-indicator" width="10" height="10" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 0L6 6H0L3 0Z" fill="currentColor" opacity="0.5"/></svg>${icon} Расчёт по площади`;
     }
 
     if (paramsCard) paramsCard.classList.toggle('expanded', isParamsExpanded);
@@ -579,11 +583,16 @@ function updateStatLabels() {
     const coverageLabelEl = document.querySelector('[data-stat="coverage"] .stat-label');
 
     if (panelsLabelEl) {
-        panelsLabelEl.textContent = currentCalcMode === CALC_MODES.AREA ? 'Всего панелей' : 'Всего панелей (с запасом)';
+        panelsLabelEl.textContent = 'Всего панелей (с запасом)';
     }
 
     if (coverageLabelEl) {
         coverageLabelEl.textContent = currentCalcMode === CALC_MODES.AREA ? 'Площадь помещения' : 'Площадь покрытия';
+        if (currentCalcMode !== CALC_MODES.AREA) {
+            coverageLabelEl.setAttribute('title', 'Эффективная площадь покрытия одной панели с учётом шип-паз соединения равна 0,39 м²');
+        } else {
+            coverageLabelEl.removeAttribute('title');
+        }
     }
 }
 
@@ -803,7 +812,7 @@ async function saveAreaPdf() {
             width: 210mm;
             background: white;
             padding: 0;
-            font-family: 'Arial', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: #333;
             box-sizing: border-box;
         `;
@@ -820,7 +829,7 @@ async function saveAreaPdf() {
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
                             <div>Звукоизоляционная система для потолка</div>
                             <div style="font-size: 14px; color: rgba(255,255,255,0.7); font-weight: normal;">
-                                от компании Стандартпласт
+                                by STANDARTPLAST
                             </div>
                         </div>
                     </div>
@@ -937,7 +946,7 @@ async function saveToPDF() {
             width: 210mm;
             background: white;
             padding: 0;
-            font-family: 'Arial', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: #333;
             box-sizing: border-box;
         `;
@@ -957,7 +966,7 @@ async function saveToPDF() {
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.5); padding-top: 8px;">
                             <div>Звукоизоляционная система для потолка</div>
                             <div style="font-size: 14px; color: rgba(255,255,255,0.7); font-weight: normal;">
-                                от компании Стандартпласт
+                                by STANDARTPLAST
                             </div>
                         </div>
                     </div>

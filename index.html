@@ -22,6 +22,9 @@
             <div class="input-panel">
                 <div class="calc-group" id="paramsGroup">
                     <button class="btn btn-secondary" id="toggleParamsCalc" onclick="toggleParamsCalc()" style="margin-bottom: 16px;">
+                        <svg class="toggle-indicator" width="10" height="10" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 0L6 6H0L3 0Z" fill="currentColor" opacity="0.5"/>
+                        </svg>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
                             <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/>
                             <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/>
@@ -76,6 +79,9 @@
 
                 <div class="calc-group" id="areaGroup">
                     <button class="btn btn-secondary" id="toggleQuickCalc" onclick="toggleQuickCalc()" style="margin-bottom: 16px;">
+                        <svg class="toggle-indicator" width="10" height="10" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 0L6 6H0L3 0Z" fill="currentColor" opacity="0.5"/>
+                        </svg>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
                             <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -92,10 +98,10 @@
                             Приблизительная оценка по площади
                         </p>
                         <div class="form-group">
-                            <label for="quickArea">
+                            <label for="quickArea" title="Введите общую площадь помещения в квадратных метрах (от 0.1 до 10000 м²)">
                                 Площадь помещения (м²):
                             </label>
-                            <input type="number" id="quickArea" placeholder="25" step="0.1" min="0.1" max="5000">
+                            <input type="number" id="quickArea" placeholder="25" step="0.1" min="0.1" max="10000">
                     </div>
                     </div>
                     <p class="calc-mode-hint hint-collapsed">
@@ -112,13 +118,13 @@
                         <div class="static-field">0,75 × 0,55 м</div>
                     </div>
                     <div class="form-group">
-                        <label>
+                        <label title="Эффективная площадь покрытия одной панели с учётом шип-паз соединения равна 0,39 м²">
                             Площадь покрытия:
                         </label>
                         <div class="static-field">0,40 м²</div>
                     </div>
                     <div class="form-group">
-                        <label>
+                        <label title="Рекомендованная розничная цена за единицу и за квадратный метр">
                             РРЦ (рекомендованная розничная цена):
                         </label>
                         <div class="static-field">
@@ -218,7 +224,7 @@
                                 Поделиться
                             </button>
                         </div>
-                        <div id="resultsText" style="white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; color: var(--text-primary);"></div>
+                        <div id="resultsText" style="white-space:pre-wrap; font-size:13px; color: var(--text-primary);"></div>
                     </div>
                 </div>
             </div>

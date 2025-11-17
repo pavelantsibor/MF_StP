@@ -249,36 +249,55 @@ function renderAreaScheme(area) {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const width = 620;
-    const height = 420;
+    // Адаптивные размеры для мобильной версии
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    const width = isMobile ? Math.min(620, window.innerWidth - 80) : 620;
+    const height = isMobile ? Math.min(280, width * 0.45) : 420;
     const hasArea = typeof area === 'number' && !isNaN(area) && area > 0;
 
     canvas.width = width;
     canvas.height = height;
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
+    canvas.style.maxWidth = '100%';
+    canvas.style.maxHeight = isMobile ? '280px' : '420px';
 
     ctx.clearRect(0, 0, width, height);
 
+    // Адаптивные отступы для прямоугольника
+    const rectPadding = isMobile ? 30 : 40;
+    const rectX = rectPadding;
+    const rectY = rectPadding;
+    const rectWidth = width - rectPadding * 2;
+    const rectHeight = height - rectPadding * 2;
+
     ctx.fillStyle = '#e5e7eb';
-    ctx.fillRect(40, 40, width - 80, height - 80);
+    ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
 
     ctx.strokeStyle = '#b3bac2';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = isMobile ? 2 : 3;
     ctx.setLineDash([12, 8]);
-    ctx.strokeRect(40, 40, width - 80, height - 80);
+    ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
     ctx.setLineDash([]);
 
+    // Адаптивные размеры шрифтов и отступов
+    const fontSize = isMobile ? 24 : 36;
+    const smallFontSize = isMobile ? 18 : 28;
+    const padding = isMobile ? 30 : 40;
+    const textY = height / 2;
+    const labelX = width / 2;
+    const labelY = isMobile ? 25 : 30;
+    
     ctx.fillStyle = '#4b5563';
-    ctx.font = '600 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(hasArea ? `${area.toFixed(2)} м²` : 'Введите площадь', width / 2, height / 2);
+    ctx.fillText(hasArea ? `${area.toFixed(2)} м²` : 'Введите площадь', labelX, textY);
 
-    ctx.font = '500 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.font = `500 ${smallFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
     ctx.fillStyle = '#636d78';
-    ctx.fillText('? м', width / 2, 30);
+    ctx.fillText('? м', labelX, labelY);
     ctx.save();
-    ctx.translate(25, height / 2);
+    ctx.translate(padding - 5, textY);
     ctx.rotate(-Math.PI / 2);
     ctx.fillText('? м', 0, 0);
     ctx.restore();

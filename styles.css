@@ -1015,9 +1015,9 @@ body.theme-dark .stat-card-button:hover {
     }
 
     .brand-logo {
+        left: 50%;
         top: 10px;
-        left: 10px;
-        transform: none;
+        transform: translateX(-50%);
         height: 48px;
     }
 
@@ -1078,8 +1078,9 @@ body.theme-dark .stat-card-button:hover {
     }
 
     .brand-logo {
-        left: 8px;
+        left: 50%;
         top: 8px;
+        transform: translateX(-50%);
         height: 40px;
     }
     
@@ -1113,6 +1114,39 @@ body.theme-dark .stat-card-button:hover {
     .form-group input[type="number"],
     .form-group input[type="text"] {
         font-size: 16px; /* Предотвращает зум на iOS */
+    }
+    
+    /* Кнопка СКАЧАТЬ РАСЧЁТ в мобильной версии */
+    #downloadBtn {
+        position: static !important;
+        width: 100% !important;
+        margin-top: 16px;
+        bottom: auto !important;
+        right: auto !important;
+    }
+    
+    /* Переопределяем стиль для кнопки в карточке в мобильной версии */
+    .card .btn-print {
+        width: 100% !important;
+    }
+    
+    /* Убираем padding-bottom у текста результатов в мобильной версии */
+    .results-text {
+        padding-bottom: 0 !important;
+    }
+    
+    /* Ограничиваем размер схемы по площади в мобильной версии */
+    #areaCanvas {
+        max-width: 100% !important;
+        max-height: 280px !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain;
+    }
+    
+    #areaSchemeWrapper {
+        max-height: 300px;
+        overflow: hidden;
     }
 }
 

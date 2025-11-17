@@ -915,9 +915,28 @@ body.theme-dark .stat-card::before {
 }
 
 .stat-card-button {
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.2s ease, background 0.2s ease;
+    background: #01644f !important;
+    border-color: #015a47 !important;
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.stat-card-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+    background: #015a47 !important;
+}
+
+body.theme-dark .stat-card-button {
+    background: #01644f !important;
+    border-color: #015a47 !important;
+}
+
+body.theme-dark .stat-card-button:hover {
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
+    background: #015a47 !important;
 }
 
 .stat-label {
@@ -1156,12 +1175,43 @@ body:not(.theme-dark) .scheme-header h2 {
     color: #ffffff;
     stroke: #ffffff;
     flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* Стили для ссылки-кнопки */
+a.btn-print {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+a.btn-print:hover {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+a.btn-print:active {
+    color: #ffffff;
+    text-decoration: none;
 }
 
 .btn-print:hover {
     background: #015a47;
     transform: translateY(-1px);
     box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Кнопка СКАЧАТЬ в правом нижнем углу блока результатов */
+.card .btn-print {
+    width: auto;
+    padding: 12px 16px;
+    font-size: 1.1rem;
+    white-space: nowrap;
+}
+
+.card .btn-print:hover {
+    transform: translateY(-1px);
 }
 
 .btn-print:active {
